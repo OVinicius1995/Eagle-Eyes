@@ -27,7 +27,7 @@
 ## Publicação
 - [x] Checkpoint inicial local `8f4e054`, preservado.
 - [x] Versão 1.0.0 e notas de release definidas; pacote com dependências externas e SHA256.
-- [ ] Publicar branch main, tag v1.0.0 e GitHub Release com ZIP.
+- [x] Branch main, tag v1.0.0 e GitHub Release publicados com ZIP e SHA256: https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.0.0 . Download público conferido por SHA256.
 
 ## Verificações específicas ainda não documentadas
 - [ ] Escalas 125%/150%, DPI misto, monitores negativos, movimento entre monitores e desconexão física.

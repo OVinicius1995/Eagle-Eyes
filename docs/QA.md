@@ -65,3 +65,4 @@ O líder executou `scripts/Build.ps1 -Live`: build Release da solução com zero
 ## Preparação do release 1.0.0
 O usuário informou que realizou os testes e autorizou a publicação. A preparação repetiu build Release (zero avisos/erros) e as 8 verificações básicas; o núcleo e a interface não sofreram alterações funcionais. A versão explícita e os metadados são 1.0.0. Acentuação da documentação corrigida.
 O aplicativo estava aberto e bloqueou a pasta habitual de publicação. O empacotamento passou a usar uma pasta isolada, sem encerrar o processo do usuário. ZIP inspecionado automaticamente: executável, DLLs, runtimeconfig, instruções e dependências presentes; sem FFmpeg, vídeos ou PDBs. SHA256 acompanha o pacote.
+Publicação concluída: GitHub Release v1.0.0 estável e público, main e tag enviados sem force push. ZIP público baixado novamente em memória e comparado ao SHA256 local: PASS. Nenhum binário FFmpeg ou vídeo de teste foi distribuído.
