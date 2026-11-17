@@ -9,8 +9,8 @@ $tag="v$Version"
 $releaseRoot=Join-Path $repoRoot "artifacts\releases\$tag"
 $assets=@((Join-Path $releaseRoot "Eagle-Eyes-$tag-win-x64.zip"),(Join-Path $releaseRoot "Eagle-Eyes-$tag-win-x64.zip.sha256"))
 foreach($asset in $assets){if(!(Test-Path -LiteralPath $asset)){throw "Prepare o pacote antes: $asset"}}
-if(Git-Run @('status','--porcelain')){throw 'Commit pendente: a árvore de trabalho precisa estar limpa.'}
-$sha=(Git-Run @('rev-parse','HEAD')).Trim()
+if(Git-Run -Arguments @('status','--porcelain')){throw 'Commit pendente: a árvore de trabalho precisa estar limpa.'}
+$sha=(Git-Run -Arguments @('rev-parse','HEAD')).Trim()
 $env:GIT_TERMINAL_PROMPT='0';$env:GCM_INTERACTIVE='Never'
 $credential="protocol=https`nhost=github.com`n`n" | & $git credential fill 2>$null
 if($LASTEXITCODE-ne 0){throw 'Autentique no GitHub: git credential-manager github login --device --no-ui'}
@@ -21,10 +21,10 @@ $headers=@{Authorization="Bearer $token";Accept='application/vnd.github+json';'X
 $api='https://api.github.com/repos/OVinicius1995/Eagle-Eyes'
 try{
     $null=Invoke-RestMethod -Uri $api -Headers $headers
-    $tags=Git-Run @('tag','--list',$tag)
-    if($tags){$tagSha=(Git-Run @('rev-list','-n','1',$tag)).Trim();if($tagSha-ne $sha){throw 'A tag já aponta para outro commit; não será alterada.'}}
-    else{Git-Run @('tag','-a',$tag,'-m',"Eagle Eyes $Version")}
-    Git-Run @('push','--atomic','-u','origin','main',"refs/tags/$tag")
+    $tags=Git-Run -Arguments @('tag','--list',$tag)
+    if($tags){$tagSha=(Git-Run -Arguments @('rev-list','-n','1',$tag)).Trim();if($tagSha-ne $sha){throw 'A tag já aponta para outro commit; não será alterada.'}}
+    else{Git-Run -Arguments @('tag','-a',$tag,'-m',"Eagle Eyes $Version")}
+    Git-Run -Arguments @('push','--atomic','-u','origin','main',"refs/tags/$tag")
     $release=$null
     try{$release=Invoke-RestMethod -Uri "$api/releases/tags/$tag" -Headers $headers}catch{if([int]$_.Exception.Response.StatusCode-ne 404){throw}}
     if(!$release){
