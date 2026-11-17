@@ -1,6 +1,6 @@
 ﻿# Eagle Eyes
 
-Gravador de tela Windows para evidências de testes de software. Primeira versão: **1.0.0**, em C#/.NET 11, WPF e FFmpeg externo.
+Gravador de tela Windows para evidências de testes de software. Release público estável: **1.0.0**. Esta branch contém as melhorias **UX 1.1 em desenvolvimento**, em C#/.NET 11, WPF e FFmpeg externo; ainda sem nova publicação.
 
 ## Instalar e abrir
 Baixe o ZIP Windows x64 na [página de releases](https://github.com/OVinicius1995/Eagle-Eyes/releases), extraia a pasta inteira e execute `EagleEyes.App.exe`.
@@ -11,17 +11,20 @@ Dependências:
 
 Ao executar pelo repositório, o app também encontra `components/ffmpeg-master-latest-win64-gpl/bin`. Veja [dependências e proveniência](docs/DEPENDENCIES.md).
 
-## Gravar
-A engrenagem permite escolher pasta de saída, monitor, região ou monitor inteiro, FFmpeg e fixação. Clique no botão de vídeo, arraste uma região dentro de um único monitor (Esc cancela), confirme o aviso e aguarde a contagem de 3 segundos.
+## Gravar nesta versão em desenvolvimento
+A engrenagem escolhe pasta de saída, monitor, modo e FFmpeg. O botão de vídeo abre a seleção: arraste uma região ou pressione Espaço para usar somente o monitor sob o ponteiro. Esc cancela e retorna à barra principal. A seleção não inicia captura.
 
-Por padrão a barra some durante a gravação. `Ctrl+Shift+P` pausa e a traz de volta; o mesmo atalho retoma. `Ctrl+Shift+F` finaliza. A barra só reaparece após encerrar o trecho para evitar capturar seus controles. Atalhos em conflito impedem esse modo até liberar as teclas e reiniciar. Se desativar a ocultação, confira no vídeo se a exclusão por API funcionou no seu ambiente.
+A barra de preparação permanece visível junto da área destacada. Use Gravar, Selecionar novamente ou Cancelar. Ao iniciar, a contagem central 3, 2, 1 aparece no monitor escolhido; Esc cancela a contagem e volta à área preparada. O painel e o destaque são fechados antes de iniciar FFmpeg.
 
-Arraste pela alça de linhas para mover e encaixar na borda mais próxima. A seta recolhe/expande. “Manter expandida” impede recolhimento automático, mas permite arrastar.
+Durante a gravação, uma barra horizontal permanece visível com estado, tempo efetivamente gravado, pausar/retomar, parar e salvar, e descartar. Os atalhos Ctrl+Shift+P e Ctrl+Shift+F continuam disponíveis quando registrados. A barra tenta se excluir por WDA; o resultado precisa ser validado por ambiente. Prefira posicioná-la fora da região quando houver espaço.
 
-O vídeo inclui cursor, usa 15 fps e nunca captura áudio. Pausas viram trechos separados, reunidos em um único MP4 sem o tempo pausado. Nomes únicos evitam sobrescrita; o Explorer seleciona a saída ao concluir. Sem editor, captura de imagem, webcam, login ou nuvem.
+Parar e salvar funciona gravando ou pausado, sem confirmação adicional. Após validar o MP4, o app informa sucesso e oferece Abrir pasta. Descartar abre confirmação após pausar; cancelar restaura o estado anterior. Confirmar exclui somente arquivos conhecidos da sessão atual, sem gerar MP4 final. Arquivos desconhecidos ou impossíveis de excluir são preservados e informados.
 
-As pastas `.eagle-eyes-session-*` na pasta de saída guardam trechos e metadados, inclusive após sucesso. Remova-as manualmente somente após conferir o MP4. Em erro, preserve-as para diagnóstico; quadros ausentes não são recuperáveis. O relógio durante o trecho é uma estimativa ativa, ajustada pela duração efetiva na pausa/finalização.
+Arraste por qualquer área não interativa das barras, inclusive o cronômetro. Botões/campos não iniciam arraste e existe um limiar de movimento. A barra principal mantém encaixe nas quatro bordas e recolhimento; a barra da sessão permanece horizontal e acessível.
 
+O vídeo usa H.264 a 15 fps, cursor e nenhuma faixa de áudio. As pausas viram trechos separados, reunidos em MP4 único sem o intervalo pausado. Temporários são mantidos após salvar ou em erro; remova-os manualmente somente depois de conferir a saída. O descarte confirmado é a operação explícita que remove os arquivos conhecidos da sessão. Quadros ausentes não são recuperáveis.
+
+Mensagens principais são breves; Ver detalhes e logs em `%LOCALAPPDATA%\EagleEyes\logs` guardam informações técnicas. Consulte o checkpoint UX 1.1 no ROADMAP antes de retomar uma sessão de desenvolvimento.
 ## Compilar e verificar
 Com SDK .NET 11 estável instalado, na raiz:
 

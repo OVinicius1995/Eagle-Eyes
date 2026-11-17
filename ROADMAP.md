@@ -44,16 +44,18 @@ Estado: implementação iniciada, sem nova publicação autorizada.
 
 ### Etapas
 - [x] Inspeção do código existente e Git limpo; contratos/arquivos definidos em AGENTS.md antes de distribuir.
-- [ ] Core: descarte serializado com proteção dos arquivos de outras sessões.
-- [ ] Seleção: instrução, Espaço no monitor do ponteiro, Esc e consumo das teclas.
-- [ ] Preparação: área destacada, barra persistente, iniciar/reselecionar/cancelar.
-- [ ] Contagem: painel central 3,2,1, anel verde, Esc volta à preparação; remover antes de capturar.
-- [ ] Arraste: áreas não interativas com limiar; quatro bordas e área útil preservadas.
-- [ ] Sessão: barra horizontal sempre visível, estado textual, cronômetro, pausa/retomada e salvar.
-- [ ] Descarte: confirmação personalizada, pausa prévia, restauração de estado ou exclusão restrita.
-- [ ] Mensagens breves, detalhes em logs, sucesso confirmado e ação Abrir pasta.
+- [x] Core: descarte serializado com proteção dos arquivos de outras sessões; 58 verificações reais aprovadas, incluindo reparse/symlink e arquivos desconhecidos.
+- [x] Implementada seleção: instrução, Espaço no monitor do ponteiro, Esc e consumo das teclas. Validação UI real ainda pendente.
+- [x] Implementada preparação: área destacada, barra persistente, iniciar/reselecionar/cancelar. Validação UI real ainda pendente.
+- [x] Implementada contagem central 3,2,1, anel verde e Esc voltando à preparação. Remoção e espera do compositor antes do início; prova em vídeo ainda pendente.
+- [x] Implementado arraste por áreas não interativas com limiar e ajuste à área útil. QA por mouse ainda pendente.
+- [x] Integrada barra horizontal sempre visível com estado textual, cronômetro, pausa/retomada e salvar. Cronômetro por progresso FFmpeg implementado; regressão dessa mudança em execução.
+- [x] Integrada confirmação de descarte com pausa prévia, restauração de estado e exclusão restrita. Cenários pela UI ainda pendentes.
+- [x] Integradas mensagens breves, detalhes/logs, sucesso após validação e ação Abrir pasta.
 - [ ] Build e testes de regressão/Core/UI, exclusão real das barras/contagem no gdigrab e MP4 sem áudio.
 - [ ] Executável local e commit de entrega; documentar pendências visuais/hardware.
 
 ### Próximo passo exato
-Agentes implementam Core/descarte, janelas de seleção/preparação/contagem/arraste e QA em arquivos exclusivos. Líder integra MainWindow ao novo fluxo e mensagens. Nenhum recurso novo está marcado como validado neste checkpoint.
+Build integrado Debug e Release passou sem erros/avisos. Executar tests/UI-Flow.ps1 após fechamento da instância antiga PID41228 do usuário; pedido de fechamento enviado e ainda sem confirmação. Não encerrar essa instância sem autorização: pode haver gravação ativa. QA preparou modos funcional/exclusão/controle positivo com fundo magenta para provar a barra real excluída por gdigrab e contagem ausente do MP4. Core está concluindo testes de arquivo bloqueado e cronômetro por progresso FFmpeg. Após estabilizar fontes: salvar commit local da integração, executar QA, corrigir falhas encontradas e publicar executável em pasta isolada (não sobrescrever app aberto). Não publicar novo release nem enviar a branch sem pedido.
+
+Retomada: ler AGENTS.md seção UX1.1 e esta seção antes de agir; verificar Git e processos. Não repetir provas já aprovadas sem mudança relevante. O usuário pediu checkpoints frequentes; saldo de uso não é acessível ao agente.
