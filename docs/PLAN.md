@@ -1,19 +1,18 @@
-# Plano e decisÃµes
+﻿# Plano e decisões
 
-1. Inspecionar pasta, SDKs, FFmpeg e Git; preservar histÃ³rico. Pasta inicialmente vazia; ls-remote retornou sucesso sem refs. Git inicializado em main e origin configurado.
-2. Definir contratos e Ã¡reas exclusivas em AGENTS.md antes de distribuir implementaÃ§Ã£o.
-3. Prova tÃ©cnica de gdigrab: regiÃ£o, cursor, 15 fps, duas pausas por segmentos, concatenaÃ§Ã£o sem Ã¡udio e exame da exclusÃ£o de janela. A prova precede expansÃ£o da interface.
-4. Integrar barra WPF compacta; captura/controlador desacoplados da apresentaÃ§Ã£o.
-5. Build Release e harness; produzir executÃ¡vel. Registrar separadamente validaÃ§Ãµes automÃ¡ticas e visuais.
-6. Preparar commit local no ponto solicitado pelo usuÃ¡rio (~20:32 UTC, 17/11/2026). Sem push.
+1. Inspecionar pasta, SDKs, FFmpeg e Git. A pasta inicial não tinha fontes/histórico; o remoto estava sem referências. Git inicializado em main com o origin solicitado.
+2. Definir contratos e áreas exclusivas em AGENTS.md antes de delegar captura, desktop e QA, com integração pelo líder.
+3. Provar gdigrab, região, cursor configurado, 15 fps, duas pausas por segmentos, concatenação sem áudio e exclusão de janela antes de expandir a interface.
+4. Integrar barra WPF compacta e manter captura/controlador separados da apresentação.
+5. Executar build Release, harness e fluxo real de seleção/atalhos; publicar executável local. Registrar separadamente validações automáticas e visuais.
+6. Preservar o checkpoint inicial 8f4e054. Após o usuário informar testes concluídos e autorizar, preparar versão 1.0.0, ZIP, SHA256 e release no GitHub sem force push.
 
 ## Tecnologia
-SDK 11.0.100 estÃ¡vel, instalado com WPF reference pack 11.0.0; net11.0-windows para desktop. global.json nÃ£o aceita prerelease. .NET9 instalado nÃ£o escolhido por estar fora de suporte na data da implementaÃ§Ã£o. .NET10 runtime existe, mas SDK/reference pack WPF10 nÃ£o estÃ£o instalados.
-PolÃ­tica consultada: https://dotnet.microsoft.com/en-us/platform/support/policy
-FFmpeg gdigrab: https://ffmpeg.org/ffmpeg-devices.html#gdigrab
+SDK 11.0.100 estável com WPF 11, fixado sem prerelease. SDK 10/reference pack WPF 10 não estavam instalados. Política consultada: https://dotnet.microsoft.com/en-us/platform/support/policy . Dispositivo: https://ffmpeg.org/ffmpeg-devices.html#gdigrab .
 
-## Pausa e finalizaÃ§Ã£o
-Pausa encerra corretamente o segmento atual. Retomar abre um novo segmento com os mesmos parÃ¢metros. NÃ£o se captura Ã¡udio nem se injeta silÃªncio. ConcatenaÃ§Ã£o exclui o tempo de pausa por construÃ§Ã£o. InÃ­cio/fechamento dos processos pode introduzir pequena latÃªncia nas transiÃ§Ãµes; duraÃ§Ã£o do arquivo Ã© a evidÃªncia definitiva.
+## Pausas e recuperação
+Pausa encerra o segmento; retomar inicia outro com os mesmos parâmetros. Não há entrada de áudio nem silêncio artificial. Concatenação exclui a pausa por construção. Há latência de inicialização/fechamento de processo; a duração do arquivo é a evidência definitiva.
+A saída usa nome único. Temporários permanecem inclusive após sucesso e não são apagados antes da validação. O app não recria quadros nunca capturados.
 
-## PublicaÃ§Ã£o e recuperaÃ§Ã£o
-Arquivo final recebe nome Ãºnico, sem sobrescrita; temporÃ¡rios permanecem disponÃ­veis em falhas. O app nÃ£o reconstrÃ³i quadros nunca capturados. BinÃ¡rios de terceiros e evidÃªncias nÃ£o entram no Git.
+## Pacote público
+Distribuir apenas o aplicativo dependente de runtime, instruções e documentação. FFmpeg permanece externo por falta de proveniência exata confirmada da cópia local. Registrar versão e SHA256; não incluir vídeos de teste no Git ou no ZIP.

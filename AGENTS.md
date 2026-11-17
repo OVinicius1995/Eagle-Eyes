@@ -1,20 +1,23 @@
-# Eagle Eyes â€” regras e arquitetura
-Aplicativo Windows prÃ³prio em C#/.NET 11 estÃ¡vel, WPF e FFmpeg externo. NÃ£o usar preview. Interface em portuguÃªs, vetores prÃ³prios; sem Ã¡udio, imagem, webcam, editor, login ou nuvem.
+﻿# Eagle Eyes - regras e arquitetura
+
+Aplicativo Windows em C#/.NET 11 estável, WPF e FFmpeg externo. Não usar SDK preview. Interface em português com vetores próprios. Sem áudio, captura de imagem, webcam, editor, login ou nuvem.
 
 ## Componentes e contratos
-- `src/EagleEyes.Core/Capture.cs`: CaptureArea(X,Y,Width,Height) em pixels fÃ­sicos globais. RecordingSession(ffmpegPath,ffprobePath): StartAsync(area,outputDirectory), PauseAsync(), ResumeAsync(), StopAsync(): Task<string>; State, RecordedDuration, RecoveryDirectory; IDisposable.
-- Core serializa operaÃ§Ãµes e captura segmentos a 15 fps, cursor incluÃ­do, sem entrada de Ã¡udio. Pausa fecha segmento; retomada abre outro. FinalizaÃ§Ã£o concatena, verifica vÃ­deo/ausÃªncia de Ã¡udio e sÃ³ entÃ£o publica MP4 Ãºnico sem sobrescrever.
-- `src/EagleEyes.App/`: WPF, monitores/DPI, seleÃ§Ã£o em um monitor, contagem regressiva, atalhos, docking e persistÃªncia. NÃ£o executar FFmpeg diretamente da UI; nÃ£o bloquear Dispatcher.
-- `tests/` e `docs/QA.md`: harness e evidÃªncias. Distinguir verificaÃ§Ãµes automÃ¡ticas de validaÃ§Ã£o visual.
+- `src/EagleEyes.Core/Capture.cs`: `CaptureArea(X,Y,Width,Height)` em pixels físicos globais. `RecordingSession(ffmpegPath,ffprobePath)` oferece `StartAsync(area,outputDirectory)`, `PauseAsync()`, `ResumeAsync()` e `StopAsync(): Task<string>`, além de `State`, `RecordedDuration`, `RecoveryDirectory` e `IDisposable`.
+- Core serializa comandos, captura a 15 fps com cursor e sem áudio. Pausar fecha o trecho; retomar cria outro. Finalização concatena, valida com FFprobe e publica nome único sem sobrescrita.
+- `src/EagleEyes.App/`: WPF, monitores/DPI, seleção dentro de um monitor, contagem regressiva, atalhos, encaixe nas bordas e persistência. A UI não executa FFmpeg diretamente nem bloqueia o Dispatcher.
+- `tests/` e `docs/QA.md`: harness e evidências. Separar testes automáticos de validação visual e de testes informados pelo usuário.
 
-## Propriedade dos arquivos nesta implementaÃ§Ã£o
-IntegraÃ§Ã£o (lÃ­der): raiz, README, ROADMAP, AGENTS, docs exceto QA, scripts. Captura: Core. Desktop: App. QA: tests e docs/QA.md. Coordenar contratos antes de alterÃ¡-los; nÃ£o editar arquivos de outro agente sem transferÃªncia explÃ­cita.
+## Responsabilidades
+Antes de delegar, definir contratos e propriedade de arquivos. Integração: raiz, documentação e scripts. Captura: Core. Desktop: App. QA: tests e docs/QA.md. Coordenar alterações nos contratos; transferir explicitamente a propriedade antes de editar arquivos de outro agente. A implementação inicial foi integrada e encerrada; manutenção e publicação estão sob responsabilidade do líder.
 
-## Robustez e fluxo
-Preservar temporÃ¡rios apÃ³s falha. Nunca apagar antes de verificar saÃ­da final. NÃ£o prometer recuperar quadros ausentes. Comandos invÃ¡lidos/duplicados devem ser rejeitados. Coordenadas negativas e DPI misto sÃ£o requisitos. Tentar excluir controles da captura; documentar o resultado e o comportamento alternativo.
-Inspecionar arquivos e Git antes de mudanÃ§as. NÃ£o reescrever histÃ³rico, nÃ£o force push. Preparar commits locais; publicaÃ§Ã£o sÃ³ apÃ³s validaÃ§Ã£o/autorizaÃ§Ã£o. NÃ£o versionar binÃ¡rios FFmpeg, vÃ­deos, temporÃ¡rios ou saÃ­das de build.
-Atualizar ROADMAP e documentaÃ§Ã£o a cada marco, registrando pendÃªncias reais. Testar captura/pausas antes de expandir UI. NÃ£o marcar requisito como validado sem evidÃªncia.
-## Validação e entrega local
-`powershell -File scripts/Build.ps1 -Live` compila a solução Release, roda o harness e publica em artifacts/eagle-eyes. `tests/UI-Flow.ps1` testa UI real com mouse/atalhos e restaura configurações; exige sessão Windows interativa e app fechado. `tests/EagleEyes.AffinityProof` testa pixels antes/depois de WDA e ocultação; --transparent usa janela WPF transparente. Flags internas --smoke-test e --proof-recording não persistem preferências, não são comandos de uso normal.
+## Robustez
+Preservar temporários após falhas e nunca apagá-los antes de validar a saída. Nesta versão permanecem inclusive após sucesso: limpeza manual após conferir o MP4. Não prometer recuperar quadros ausentes. Rejeitar comandos inválidos, simultâneos e início duplicado. Considerar DPI misto e coordenadas negativas; registrar os cenários realmente testados.
+A barra é ocultada por padrão durante captura. Confirmar registro dos atalhos antes de ocultar e fechar o trecho antes de reaparecer. O retorno da API WDA não garante exclusão universal. Durante captura o relógio é uma estimativa ativa, ajustada pela duração dos arquivos na pausa/finalização.
 
-Temporários .eagle-eyes-session-* são mantidos inclusive após sucesso; limpeza manual somente após conferir a saída. Durante captura a duração é estimativa ativa; pausa/finalização ajustam pelo FFprobe. Desktop oculta por padrão, valida registro dos atalhos antes de fazê-lo e fecha o trecho antes de reaparecer. Não confundir sucesso WDA em janela de teste com garantia universal para a barra.
+## Verificação e Git
+Inspecionar arquivos e estado local/remoto antes de alterações. Não reescrever histórico nem fazer force push. Não versionar FFmpeg, vídeos, temporários ou builds. Atualizar ROADMAP e documentação em cada marco, sem marcar cenários específicos como testados apenas por aprovação geral.
+`powershell -File scripts/Build.ps1 -Live` compila Release, testa e publica localmente. `tests/UI-Flow.ps1` exige desktop interativo e app fechado; move o mouse, envia atalhos e restaura configurações. `tests/EagleEyes.AffinityProof` testa pixels com WDA; `--transparent` usa janela transparente. Flags internas `--smoke-test` e `--proof-recording` não persistem preferências.
+
+## Releases
+O usuário autorizou publicar o release 1 após informar que realizou os testes. Usar tag `v1.0.0`, preservar commits existentes e publicar sem force push. O pacote é Windows x64 dependente do .NET Desktop Runtime 11, com FFmpeg externo. Não incluir a distribuição FFmpeg fornecida localmente sem confirmar sua proveniência e obrigações de distribuição. Documentar dependências e gerar SHA256 do ZIP. `scripts/Prepare-Release.ps1` prepara o pacote reproduzível.

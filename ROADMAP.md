@@ -1,40 +1,39 @@
-# Eagle Eyes Ã¢â‚¬â€ roadmap
+﻿# Eagle Eyes - roadmap
 
-## Implementado
-- [x] InspeÃƒÂ§ÃƒÂ£o local/remota, Git main/origin preservando ausÃƒÂªncia de histÃƒÂ³rico, SDK11.0.100 estÃƒÂ¡vel fixado.
-- [x] Contratos e ÃƒÂ¡reas de arquivos definidos antes da delegaÃƒÂ§ÃƒÂ£o; regras em AGENTS.md.
-- [x] Core separado de WPF: FFmpeg gdigrab, cursor, H.264 a 15 fps, sem ÃƒÂ¡udio.
-- [x] Pausa/retomada por segmentos, concatenaÃƒÂ§ÃƒÂ£o em MP4 ÃƒÂºnico, nomes sem sobrescrita.
-- [x] ValidaÃƒÂ§ÃƒÂ£o FFprobe, duraÃƒÂ§ÃƒÂ£o dos trechos, rejeiÃƒÂ§ÃƒÂ£o de comandos concorrentes/invÃƒÂ¡lidos.
-- [x] Falhas e temporÃƒÂ¡rios preservados; nenhum apagamento automÃƒÂ¡tico inclusive apÃƒÂ³s sucesso.
-- [x] Barra WPF escura com vetores, configuraÃƒÂ§ÃƒÂµes, fechar ocioso, indicador/tempo, pausar/retomar/finalizar.
-- [x] RegiÃƒÂ£o por arraste limitada a um monitor; opÃƒÂ§ÃƒÂ£o monitor inteiro e contagem regressiva3 s.
-- [x] Atalhos Ctrl+Shift+P e Ctrl+Shift+F com detecÃƒÂ§ÃƒÂ£o de conflito; ÃƒÂºnica instÃƒÂ¢ncia desktop.
-- [x] Quatro bordas, orientaÃƒÂ§ÃƒÂ£o, arraste, recolhimento170ms e fixaÃƒÂ§ÃƒÂ£o nas configuraÃƒÂ§ÃƒÂµes.
-- [x] PersistÃƒÂªncia por monitor/borda/posiÃƒÂ§ÃƒÂ£o/estado, fallback de monitor e ÃƒÂ¡rea ÃƒÂºtil; PerMonitorV2.
-- [x] Escolha de pasta/FFmpeg, descoberta components, abrir saÃƒÂ­da no Explorer.
-- [x] Tentativa WDA e alternativa padrÃƒÂ£o: ocultar durante captura, exibir somente depois de fechar trecho.
-- [x] README, scripts, plano e dependÃƒÂªncias/licenÃƒÂ§as documentados.
+## Release 1.0.0 implementado
+- [x] Arquitetura separada entre WPF, sessão e FFmpeg; contratos e responsabilidades documentados antes da delegação.
+- [x] Captura de região em um monitor e opção de monitor inteiro, cursor, H.264 a 15 fps, sem áudio.
+- [x] Contagem regressiva, múltiplas pausas e retomadas, MP4 único sem tempo de pausa.
+- [x] Duração efetiva ajustada pelos arquivos, comandos serializados, única instância desktop.
+- [x] Barra compacta com vetores, configurações, estado, pausa/retomada e finalização.
+- [x] Arraste, encaixe nas quatro bordas, orientação, recolhimento animado e fixação.
+- [x] Persistência de monitor/borda/posição/estado, área útil, fallback de monitor e PerMonitorV2.
+- [x] Atalhos Ctrl+Shift+P e Ctrl+Shift+F com detecção de conflito.
+- [x] Escolha de pasta, nomes únicos, abertura no Explorer e descoberta do FFmpeg externo.
+- [x] Tentativa de exclusão por WDA e ocultação previsível como padrão.
+- [x] Tratamento de falhas e preservação dos temporários, inclusive após sucesso.
+- [x] README, regras, plano, QA, scripts e dependências documentados.
 
-## Validado atÃƒÂ© agora
-- [x] Prova direta FFmpeg antes da expansÃƒÂ£o da interface: regiÃƒÂ£o, duas pausas, decode completo MP4 sem ÃƒÂ¡udio.
-- [x] Prova Core real: duas pausas, vÃƒÂ­deo ÃƒÂºnico15 fps, sem ÃƒÂ¡udio, dimensÃƒÂµes e duraÃƒÂ§ÃƒÂ£o sem pausas.
-- [x] Falha na validaÃƒÂ§ÃƒÂ£o FFprobe preserva arquivos recuperÃƒÂ¡veis.
-- [x] Build Release integrado: zero erros e avisos.
-- [x] Smoke WPF: janela/atalhos registrados, limites visÃƒÂ­veis no monitor atual a 100%; PNG da barra inspecionado.
-- [x] Texto legÃƒÂ­vel em um quadro640x360 da prova Core; nÃƒÂ£o generalizar para todas as escalas.
-- [x] Prova WDA em janela magenta de teste no ambiente atual; ainda nÃƒÂ£o comprova barra transparente.
+## Validações realizadas
+- [x] Prova direta FFmpeg antes de expandir a interface: região, duas pausas, MP4 sem áudio e decodificação completa.
+- [x] Harness: 27 verificações, incluindo reuso de sessão, nomes únicos e preservação após falha no FFprobe.
+- [x] Fluxo real via UIAutomation, seleção por mouse e duas pausas/retomadas pelos atalhos: MP4 de 7,2 segundos, 640x360, 15 fps, sem áudio e decodificação completa.
+- [x] Build Release sem erros/avisos e executável publicado localmente.
+- [x] Smoke Debug/Release das quatro bordas nos dois estados a 100%, posição visível e hit tests internos WPF.
+- [x] Quadros de vídeo e PNGs da barra inspecionados; texto legível nas amostras.
+- [x] WDA verificado por pixels em janelas WPF opaca e transparente neste ambiente.
+- [x] Usuário informou que realizou os testes e aprovou a publicação do release 1. Os cenários individuais não foram detalhados.
 
-## Em validaÃƒÂ§ÃƒÂ£o / entrega
-- [x] Fluxo real usa handlers da barra e alternativa padrão de ocultar.
-- [ ] Fluxo real botÃƒÂ£oÃ¢â€ â€™seleÃƒÂ§ÃƒÂ£oÃ¢â€ â€™contagemÃ¢â€ â€™duas pausasÃ¢â€ â€™finalizaÃƒÂ§ÃƒÂ£o.
-- [ ] Publicar executÃƒÂ¡vel local e preparar commit solicitado (~20:32 UTC em 17/11/2026).
+## Publicação
+- [x] Checkpoint inicial local `8f4e054`, preservado.
+- [x] Versão 1.0.0 e notas de release definidas; pacote com dependências externas e SHA256.
+- [ ] Publicar branch main, tag v1.0.0 e GitHub Release com ZIP.
 
-## ValidaÃƒÂ§ÃƒÂ£o visual/hardware pendente
-- [ ] AparÃƒÂªncia, ÃƒÂ¡rea clicÃƒÂ¡vel e animaÃƒÂ§ÃƒÂ£o em100%, 125%, 150% nas quatro bordas.
-- [ ] DPI misto, monitores com coordenadas negativas, movimentaÃƒÂ§ÃƒÂ£o e desconexÃƒÂ£o fÃƒÂ­sica.
-- [ ] ExclusÃƒÂ£o da barra transparente com opÃƒÂ§ÃƒÂ£o de ocultar desabilitada; cursor no vÃƒÂ­deo.
-- [ ] ReproduÃƒÂ§ÃƒÂ£o no player do Windows e legibilidade de texto em cenÃƒÂ¡rios reais.
-- [ ] Pasta sem permissÃƒÂ£o por ACL e falhas de disco/finalizaÃƒÂ§ÃƒÂ£o durante escrita.
+## Verificações específicas ainda não documentadas
+- [ ] Escalas 125%/150%, DPI misto, monitores negativos, movimento entre monitores e desconexão física.
+- [ ] Monitor inteiro pelo fluxo real e presença visual do cursor no vídeo.
+- [ ] Reprodução no player do Windows; leitura de textos em diferentes cenários.
+- [ ] Clique real através da parte transparente em outro aplicativo e percepção da animação/foco.
+- [ ] Falhas por ACL, disco sem espaço e interrupção externa de processo.
 
-Consulte docs/QA.md para comandos e evidÃƒÂªncias atuais. Recursos implementados nÃƒÂ£o equivalem a validaÃƒÂ§ÃƒÂ£o visual completa. Sem push/publicaÃƒÂ§ÃƒÂ£o remota nesta etapa. Sem editor, captura de imagem, webcam, login ou nuvem.
+A aprovação geral do usuário não substitui evidência individual desses cenários. Sem editor, captura de imagem, webcam, login ou nuvem nesta versão.

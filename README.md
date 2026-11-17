@@ -1,30 +1,40 @@
-# Eagle Eyes
+﻿# Eagle Eyes
 
-Gravador de tela Windows para evidÃªncias de testes. WPF, C#/.NET 11 estÃ¡vel e FFmpeg externo. Primeira versÃ£o em implementaÃ§Ã£o; consulte [ROADMAP.md](ROADMAP.md) e [docs/QA.md](docs/QA.md) para o estado validado.
+Gravador de tela Windows para evidências de testes de software. Primeira versão: **1.0.0**, em C#/.NET 11, WPF e FFmpeg externo.
 
-## Compilar
-Instale SDK .NET 11 estÃ¡vel e use Windows x64. Na raiz:
+## Instalar e abrir
+Baixe o ZIP Windows x64 na [página de releases](https://github.com/OVinicius1995/Eagle-Eyes/releases), extraia a pasta inteira e execute `EagleEyes.App.exe`.
+
+Dependências:
+- Windows x64 com .NET Desktop Runtime 11. O pacote não inclui o runtime: https://dotnet.microsoft.com/download/dotnet/11.0
+- `ffmpeg.exe` e `ffprobe.exe`, com gdigrab e libx264. Coloque-os na subpasta `ffmpeg` ao lado do executável, ou selecione sua pasta nas configurações. Preserve os avisos e licenças da distribuição obtida. Os binários FFmpeg não acompanham este release.
+
+Ao executar pelo repositório, o app também encontra `components/ffmpeg-master-latest-win64-gpl/bin`. Veja [dependências e proveniência](docs/DEPENDENCIES.md).
+
+## Gravar
+A engrenagem permite escolher pasta de saída, monitor, região ou monitor inteiro, FFmpeg e fixação. Clique no botão de vídeo, arraste uma região dentro de um único monitor (Esc cancela), confirme o aviso e aguarde a contagem de 3 segundos.
+
+Por padrão a barra some durante a gravação. `Ctrl+Shift+P` pausa e a traz de volta; o mesmo atalho retoma. `Ctrl+Shift+F` finaliza. A barra só reaparece após encerrar o trecho para evitar capturar seus controles. Atalhos em conflito impedem esse modo até liberar as teclas e reiniciar. Se desativar a ocultação, confira no vídeo se a exclusão por API funcionou no seu ambiente.
+
+Arraste pela alça de linhas para mover e encaixar na borda mais próxima. A seta recolhe/expande. “Manter expandida” impede recolhimento automático, mas permite arrastar.
+
+O vídeo inclui cursor, usa 15 fps e nunca captura áudio. Pausas viram trechos separados, reunidos em um único MP4 sem o tempo pausado. Nomes únicos evitam sobrescrita; o Explorer seleciona a saída ao concluir. Sem editor, captura de imagem, webcam, login ou nuvem.
+
+As pastas `.eagle-eyes-session-*` na pasta de saída guardam trechos e metadados, inclusive após sucesso. Remova-as manualmente somente após conferir o MP4. Em erro, preserve-as para diagnóstico; quadros ausentes não são recuperáveis. O relógio durante o trecho é uma estimativa ativa, ajustada pela duração efetiva na pausa/finalização.
+
+## Compilar e verificar
+Com SDK .NET 11 estável instalado, na raiz:
 
 ```powershell
-dotnet build src/EagleEyes.App/EagleEyes.App.csproj -c Release
-dotnet run --project tests/EagleEyes.Tests -c Release
+powershell -File scripts/Build.ps1
+# Captura região real do desktop nos testes:
+powershell -File scripts/Build.ps1 -Live
+# Prepara ZIP e SHA256:
+powershell -File scripts/Prepare-Release.ps1
+# Publicar após commit e autenticação GitHub:
+powershell -File scripts/Publish-Release.ps1
 ```
 
-FFmpeg e ffprobe devem estar em `components/ffmpeg-master-latest-win64-gpl/bin` sob a raiz do projeto, ou na localizaÃ§Ã£o configurada pelo aplicativo. Esta cÃ³pia foi fornecida localmente pelo usuÃ¡rio e nÃ£o Ã© versionada. Veja [dependÃªncias](docs/DEPENDENCIES.md).
+`Iniciar.cmd` abre a publicação local em `artifacts/eagle-eyes` ou compila/executa o projeto. O `global.json` fixa SDK 11.0.100 sem preview.
 
-## Escopo
-RegiÃ£o dentro de um monitor ou monitor inteiro, cursor, 15 fps, contagem regressiva, pausas por segmentos, MP4 Ãºnico sem Ã¡udio. Barra flutuante escura com configuraÃ§Ãµes, gravaÃ§Ã£o e recolhimento. Sem captura de imagem, webcam, editor, login ou nuvem.
-
-A validaÃ§Ã£o visual em escalas 100/125/150%, reproduÃ§Ã£o no player e legibilidade nÃ£o Ã© substituÃ­da pelo build. TemporÃ¡rios recuperÃ¡veis sÃ£o preservados em erros; nÃ£o existe promessa de recuperar quadros ausentes.
-
-Arquitetura e regras em [AGENTS.md](AGENTS.md); decisÃµes em [docs/PLAN.md](docs/PLAN.md).
-## Uso
-Execute `Iniciar.cmd` apÃ³s compilar. A engrenagem escolhe pasta, monitor, regiÃ£o/monitor inteiro, FFmpeg e fixaÃ§Ã£o. O botÃ£o de vÃ­deo abre a seleÃ§Ã£o por arraste (Esc cancela); confirme o aviso e aguarde3 segundos.
-
-Por padrÃ£o a barra some enquanto grava: `Ctrl+Shift+P` pausa e a traz de volta; o mesmo atalho retoma. `Ctrl+Shift+F` finaliza. A barra somente reaparece quando o Ãºltimo trecho jÃ¡ foi encerrado, evitando capturar seus controles. Atalhos em conflito impedem esse modo atÃ© liberar as teclas/reiniciar. Se optar por deixar a barra visÃ­vel, a exclusÃ£o por API depende do ambiente e precisa ser conferida no vÃ­deo.
-
-Arraste pela pequena alÃ§a de linhas para mover; ao soltar, a barra encaixa na borda mais prÃ³xima. A seta recolhe/expande. A fixaÃ§Ã£o impede recolhimento automÃ¡tico, mantendo o arraste disponÃ­vel.
-
-A saÃ­da usa nomes EagleEyes-data-hora com sufixos para nÃ£o sobrescrever. O Explorer seleciona o MP4 ao concluir. As pastas `.eagle-eyes-session-*` na pasta de saÃ­da guardam trechos e metadados, inclusive apÃ³s sucesso. Remova-as manualmente apenas depois de conferir o MP4; em erro preserve-as para diagnÃ³stico. O relÃ³gio durante o trecho Ã© estimado pelo tempo ativo e Ã© ajustado Ã  duraÃ§Ã£o efetiva do arquivo ao pausar/finalizar.
-
-Para build/testes/publicaÃ§Ã£o local: `powershell -File scripts/Build.ps1`; acrescente `-Live` para capturar uma regiÃ£o real do desktop durante os testes. O executÃ¡vel gerado fica em `artifacts/eagle-eyes/EagleEyes.App.exe` e requer Windows Desktop Runtime.NET 11. Components permanece externo ao pacote.
+O primeiro marco foi validado automaticamente com duas pausas, sem áudio e decodificação completa. O usuário informou ter concluído seus testes e autorizou o release 1. Cenários específicos de múltiplos monitores e escalas continuam sem evidência individual documentada. Consulte [QA](docs/QA.md), [ROADMAP](ROADMAP.md), [AGENTS](AGENTS.md) e [notas da versão](docs/releases/v1.0.0.md).

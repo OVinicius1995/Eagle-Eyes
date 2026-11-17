@@ -1,4 +1,4 @@
-﻿param([switch]$Live)
+﻿param([switch]$Live, [string]$OutputDirectory="artifacts/eagle-eyes")
 $ErrorActionPreference='Stop'
 $repoRoot=Split-Path $PSScriptRoot -Parent
 Push-Location $repoRoot
@@ -11,7 +11,7 @@ try {
         dotnet run --project tests/EagleEyes.Tests -c Release --no-build -- --live
         if($LASTEXITCODE -ne 0){throw 'Prova real falhou.'}
     }
-    dotnet publish src/EagleEyes.App/EagleEyes.App.csproj -c Release --no-self-contained -o artifacts/eagle-eyes
+    dotnet publish src/EagleEyes.App/EagleEyes.App.csproj -c Release --no-self-contained -o $OutputDirectory
     if($LASTEXITCODE -ne 0){throw 'Publish falhou.'}
-    Write-Host 'Executável: artifacts/eagle-eyes/EagleEyes.App.exe (requer Windows Desktop Runtime .NET11).'
+    Write-Host "Executável: $OutputDirectory/EagleEyes.App.exe (requer Windows Desktop Runtime .NET 11)."
 } finally {Pop-Location}

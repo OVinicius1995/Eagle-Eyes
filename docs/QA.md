@@ -61,3 +61,7 @@ Pendentes: monitor inteiro pelo fluxo real; várias telas e coordenadas negativa
 
 ## Publicação local final
 O líder executou `scripts/Build.ps1 -Live`: build Release da solução com zero avisos/erros, harness básico8asserções e live24asserções (incluindo reuso). Publish em `artifacts/eagle-eyes` concluído. O executável publicado foi iniciado com --smoke-test:9relatórios (estado inicial mais8combinações borda/expansão), todos com janela criada, atalhos registrados, posição visível, canto transparente sem hit WPF e centro com hit. Evidências em `.test-artifacts/release-smoke*.json/png`. Este teste de hit WPF não substitui clique através da janela em outro aplicativo.
+
+## Preparação do release 1.0.0
+O usuário informou que realizou os testes e autorizou a publicação. A preparação repetiu build Release (zero avisos/erros) e as 8 verificações básicas; o núcleo e a interface não sofreram alterações funcionais. A versão explícita e os metadados são 1.0.0. Acentuação da documentação corrigida.
+O aplicativo estava aberto e bloqueou a pasta habitual de publicação. O empacotamento passou a usar uma pasta isolada, sem encerrar o processo do usuário. ZIP inspecionado automaticamente: executável, DLLs, runtimeconfig, instruções e dependências presentes; sem FFmpeg, vídeos ou PDBs. SHA256 acompanha o pacote.
