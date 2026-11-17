@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+.vs/
+artifacts/
+.test-artifacts/
+components/
+*.user
+*.mp4
+*.mkv

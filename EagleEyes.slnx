@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/EagleEyes.Core/EagleEyes.Core.csproj" />
+  <Project Path="src/EagleEyes.App/EagleEyes.App.csproj" />
+  <Project Path="tests/EagleEyes.Tests/EagleEyes.Tests.csproj" />
+  <Project Path="tests/EagleEyes.AffinityProof/EagleEyes.AffinityProof.csproj" />
+</Solution>
