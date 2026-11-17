@@ -21,3 +21,21 @@ Inspecionar arquivos e estado local/remoto antes de alterações. Não reescreve
 
 ## Releases
 O usuário autorizou publicar o release 1 após informar que realizou os testes. Usar tag `v1.0.0`, preservar commits existentes e publicar sem force push. O pacote é Windows x64 dependente do .NET Desktop Runtime 11, com FFmpeg externo. Não incluir a distribuição FFmpeg fornecida localmente sem confirmar sua proveniência e obrigações de distribuição. Documentar dependências e gerar SHA256 do ZIP. `scripts/Prepare-Release.ps1` prepara o pacote reproduzível.
+
+## Etapa UX 1.1 em andamento
+Branch local: feature/ux-1.1. Preservar v1.0.0 e não publicar novo release sem pedido. A regra anterior de esconder a barra durante captura é substituída neste escopo: barra horizontal permanece visível, tentando WDA; testar exclusão real com gdigrab, registrar limitações sem declarar sucesso só pela API.
+
+Contratos definidos antes de delegar:
+- Core: adicionar `Task<DiscardResult> DiscardAsync()` e `DiscardResult(bool Complete, IReadOnlyList<string> RemainingPaths)`. Encerrar processo antes de excluir somente arquivos conhecidos da sessão corrente; não gerar saída final no descarte nem tocar vídeos anteriores/sessões vizinhas. Preservar e relatar falhas de exclusão. Operação serializada.
+- `RegionSelection.SelectAsync()` permanece `Task<CaptureArea?>`; Espaço seleciona o monitor sob o ponteiro. Consumir KeyDown/KeyUp e concluir no KeyUp para evitar acionamento da próxima janela; Esc cancela. Nenhuma captura nessa etapa.
+- `PreparationWindow(CaptureArea area) : Window`, `Task<PreparationAction> NextActionAsync()`, `void HideAll()`, Close fecha também o destaque; enum PreparationAction { Start, Reselect, Cancel }. NextActionAsync mostra a barra/destaque e habilita controles; após resposta bloqueia ações duplicadas. WDA nas janelas; preferir barra fora da região e limitar à área útil.
+- `CountdownWindow.RunAsync(Native.Monitor monitor): Task<bool>`; true depois de 3,2,1 e fechamento completo; false com Esc. Sem iniciar Core dentro dessa janela. Caller pode voltar à preparação. Anel animado verde e painel central.
+- `WindowDragBehavior.Attach(Window window, Action? afterDrag = null)` inicia arraste somente em área não interativa e após limiar de movimento, sem impedir botões/campos/menus. `Native.ClampToWorkArea(Window)` mantém acesso após mover; `Native.TryExcludeFromCapture(Window): bool` tenta WDA.
+
+Arquivos exclusivos nesta etapa:
+- Integração/líder: MainWindow.cs, SettingsWindow.cs, Settings.cs, App.cs, mensagens/logs em novos arquivos, raiz/docs exceto QA e scripts.
+- Agente Desktop: RegionSelection.cs, Native.cs, novos PreparationWindow.cs, CountdownWindow.cs e WindowDragBehavior.cs.
+- Agente Core: src/EagleEyes.Core/** e tests/EagleEyes.Tests/Program.cs.
+- Agente QA: tests/UI-Flow.ps1, novos testes/UI/helpers sob tests exceto EagleEyes.Tests/Program.cs, docs/QA.md. Não alterar fontes de outros responsáveis; reportar correções ao dono.
+
+Checkpoint: atualizar ROADMAP em cada etapa com concluído, testes reais, pendências e próximo passo exato. Commits locais frequentes sem force push. Saldo de uso não é visível ao agente; ao pedido de pausa, salvar o estado e parar.

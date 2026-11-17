@@ -37,3 +37,23 @@
 - [ ] Falhas por ACL, disco sem espaço e interrupção externa de processo.
 
 A aprovação geral do usuário não substitui evidência individual desses cenários. Sem editor, captura de imagem, webcam, login ou nuvem nesta versão.
+
+## UX 1.1 - checkpoint de retomada
+Branch: feature/ux-1.1. Base publicada preservada: v1.0.0; HEAD inicial 383034b.
+Estado: implementação iniciada, sem nova publicação autorizada.
+
+### Etapas
+- [x] Inspeção do código existente e Git limpo; contratos/arquivos definidos em AGENTS.md antes de distribuir.
+- [ ] Core: descarte serializado com proteção dos arquivos de outras sessões.
+- [ ] Seleção: instrução, Espaço no monitor do ponteiro, Esc e consumo das teclas.
+- [ ] Preparação: área destacada, barra persistente, iniciar/reselecionar/cancelar.
+- [ ] Contagem: painel central 3,2,1, anel verde, Esc volta à preparação; remover antes de capturar.
+- [ ] Arraste: áreas não interativas com limiar; quatro bordas e área útil preservadas.
+- [ ] Sessão: barra horizontal sempre visível, estado textual, cronômetro, pausa/retomada e salvar.
+- [ ] Descarte: confirmação personalizada, pausa prévia, restauração de estado ou exclusão restrita.
+- [ ] Mensagens breves, detalhes em logs, sucesso confirmado e ação Abrir pasta.
+- [ ] Build e testes de regressão/Core/UI, exclusão real das barras/contagem no gdigrab e MP4 sem áudio.
+- [ ] Executável local e commit de entrega; documentar pendências visuais/hardware.
+
+### Próximo passo exato
+Agentes implementam Core/descarte, janelas de seleção/preparação/contagem/arraste e QA em arquivos exclusivos. Líder integra MainWindow ao novo fluxo e mensagens. Nenhum recurso novo está marcado como validado neste checkpoint.
