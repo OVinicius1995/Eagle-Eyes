@@ -40,7 +40,7 @@ A aprovação geral do usuário não substitui evidência individual desses cen�
 
 ## UX 1.1 - checkpoint de retomada
 Branch: feature/ux-1.1. Base publicada preservada: v1.0.0; HEAD inicial 383034b.
-Estado: checkpoint interrompido por limite de uso informado pelo agente QA; implementação salva, validação final pendente, sem nova publicação autorizada.
+Estado: retomado após o usuário confirmar restauração do limite. Correção dos tooltips implementada e build Debug aprovado; provas focadas em andamento, sem nova publicação autorizada.
 
 ### Etapas
 - [x] Inspeção do código existente e Git limpo; contratos/arquivos definidos em AGENTS.md antes de distribuir.
@@ -56,12 +56,11 @@ Estado: checkpoint interrompido por limite de uso informado pelo agente QA; impl
 - [ ] Executável local e commit de entrega; documentar pendências visuais/hardware.
 
 ### Próximo passo exato - retomar aqui
-1. Conferir Git na branch feature/ux-1.1 e ler AGENTS.md seção UX1.1. A tag/release pública v1.0.0 permanece preservada. Não publicar a 1.1 nem fazer push sem pedido.
-2. CORRIGIR BUG PENDENTE: barra horizontal desaparece do vídeo com WDA, mas os tooltips WPF ainda aparecem. Evidência inspecionada: .test-artifacts/ux11-ui-c064ee90ebad4430bc4e8550121f56b3/Exclusion/actualbar-gdigrab.png mostra tooltip branco dos atalhos sobre fundo magenta, embora a barra tenha sido excluída. NÃO declarar exclusão completa dos controles.
-3. Correção ainda NÃO implementada: em MainWindow.cs, substituir ToolTip strings de IconButton, duração e Window.ToolTip por ToolTip explícito; em Opened, obter HwndSource de PresentationSource.FromVisual(tooltip) e tentar WDA no HWND do popup. Se não funcionar, definir comportamento previsível sem tooltip capturado, mantendo orientação acessível. Considerar helper CaptureSafeToolTip.cs. Não basta retorno da API.
-4. Validar tooltips reais (fundo/estado, Pausar, cronômetro) com controle positivo --ux-test --disable-capture-exclusion versus WDA padrão, fundo magenta, bounding rectangle do ToolTip via UIAutomation e pixels no gdigrab E em quadro do MP4. QA estava preparando esse cenário, mas recebeu limite de uso antes de concluir. Conferir se existe implementação parcial em tests/UI-Flow.ps1 antes de alterar. Se agentes continuarem indisponíveis, executar sequencialmente.
-5. Após corrigir: build Debug/Release, repetir SOMENTE provas afetadas de exclusão/popup, atualizar documentação e executável local, salvar commit de entrega. Não repetir toda a regressão sem mudança relevante.
-
+Branch feature/ux-1.1; checkpoint anterior f63e794 preservado. O usuário confirmou restauração do limite e autorizou continuar.
+- Correção implementada em CaptureSafeToolTip.cs e MainWindow.cs: ToolTip explícito, Opacity zero antes de abrir, WDA no HwndSource próprio do popup, sem sombra separada. Tooltips de botões, corpo, duração e alça usam o helper; controle positivo --ux-test --disable-capture-exclusion desabilita também a exclusão do popup.
+- Build Debug passou sem erros/avisos. QA ativo preparando/executando testes focados TooltipsControl/Tooltips, com hover no corpo/estado, Pausar e cronômetro, bounding rectangle UIAutomation, fundo magenta, pixels gdigrab e quadros MP4. Aguardar evidência antes de declarar a exclusão completa dos controles.
+- Se prova falhar, corrigir somente o comportamento afetado e repetir a prova. Após passar, atualizar o executável Release local, relatório QA/ROADMAP e salvar commit final. Não refazer toda a regressão sem motivo.
+- Não publicar novo release nem enviar a branch sem pedido. Se limite aparecer novamente, salvar checkpoint e encerrar conforme combinado.
 ### Resultados já aprovados / não refazer sem motivo
 - Core final: 68 asserções Release --live --faults, artefatos .test-artifacts/qa-11065829dcf846d0ae925c047a63820c. Inclui relógio por out_time_us, descarte seguro, arquivo bloqueado, symlinks reais e isolamento entre sessões.
 - Functional UI: .test-artifacts/ux11-ui-b2e708ac98b04a4caf913d91e062b445. Seleção mouse/Espaço, Esc seleção e contagem, preparação persistente, 3/2/1 sem arquivos, pausas e relógio, salvar, cancelamento de descarte restaurando gravando/pausado, descarte confirmado preservando vídeo anterior; MP4 sem áudio, 15 fps e decodificação.

@@ -71,9 +71,11 @@ internal sealed class MainWindow : Window
         if (msg == 0x7e && !Active && !busy) Dispatcher.BeginInvoke(() => { var all = Native.Monitors(); if (all.Count > 0) { monitor = all.FirstOrDefault(m => m.Device == settings.MonitorDevice) ?? all[0]; settings.MonitorDevice = monitor.Device; Dock(); } });
         return IntPtr.Zero;
     }
+    ToolTip CaptureToolTip(string text) => CaptureSafeToolTip.Create(text, !(Testing && args.Contains("--disable-capture-exclusion")));
+
     Button IconButton(string tip, string geometry, Action action, double size = 32)
     {
-        var button = new Button { Width = size, Height = size, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = ink, Cursor = Cursors.Hand, ToolTip = tip, Padding = new Thickness(6), Focusable = true };
+        var button = new Button { Width = size, Height = size, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = ink, Cursor = Cursors.Hand, ToolTip = CaptureToolTip(tip), Padding = new Thickness(6), Focusable = true };
         var border = new FrameworkElementFactory(typeof(Border)); border.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent }); border.SetValue(Border.CornerRadiusProperty, new CornerRadius(5)); var presenter = new FrameworkElementFactory(typeof(ContentPresenter)); presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center); presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center); border.AppendChild(presenter); var template = new ControlTemplate(typeof(Button)) { VisualTree = border };
         var hover = new Trigger { Property = IsMouseOverProperty, Value = true }; hover.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(45, 183, 185, 205)))); template.Triggers.Add(hover);
         var focus = new Trigger { Property = IsKeyboardFocusedProperty, Value = true }; focus.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(65, 183, 185, 205)))); template.Triggers.Add(focus); button.Template = template;
@@ -105,7 +107,7 @@ internal sealed class MainWindow : Window
         var top = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3) };
         top.Children.Add(IconButton("Configurações", "M8,1 L12,1 L13,4 L16,6 L19,6 L21,10 L19,13 L19,16 L16,19 L13,19 L10,21 L6,19 L6,16 L3,13 L1,10 L3,6 L6,6 Z M14,10 A4,4 0 1 1 6,10 A4,4 0 1 1 14,10", Configure, 28));
         top.Children.Add(IconButton("Fechar Eagle Eyes", "M2,2 L18,18 M18,2 L2,18", Close, 28)); body.Children.Add(top);
-        var drag = new Border { Width = Vertical ? 54 : 12, Height = Vertical ? 12 : 54, Background = Brushes.Transparent, Cursor = Cursors.SizeAll, ToolTip = "Arraste para mover e encaixar na borda", Child = new Path { Data = Geometry.Parse(Vertical ? "M17,3 L35,3 M17,7 L35,7" : "M3,17 L3,35 M7,17 L7,35"), Stroke = ink, StrokeThickness = 1 } };
+        var drag = new Border { Width = Vertical ? 54 : 12, Height = Vertical ? 12 : 54, Background = Brushes.Transparent, Cursor = Cursors.SizeAll, ToolTip = CaptureToolTip("Arraste para mover e encaixar na borda"), Child = new Path { Data = Geometry.Parse(Vertical ? "M17,3 L35,3 M17,7 L35,7" : "M3,17 L3,35 M7,17 L7,35"), Stroke = ink, StrokeThickness = 1 } };
         body.Children.Add(drag);
         duration = null; body.Children.Add(IconButton("Gravar vídeo", "M2,4 L14,4 L14,16 L2,16 Z M14,8 L21,4 L21,16 L14,12", () => _ = Start(), 42));
         Dock();
@@ -133,7 +135,7 @@ internal sealed class MainWindow : Window
         settings.Expanded = !settings.Expanded; canvas.RenderTransform = null; Render(); if (settings.Expanded) { canvas.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170))); }
         animating = false; Save();
     }
-    void Save() { if (Testing) return; try { settings.Save(); } catch (Exception ex) { AppLog.Write("save-position", ex); ToolTip = "Não foi possível lembrar a posição da barra. Tente novamente."; } }
+    void Save() { if (Testing) return; try { settings.Save(); } catch (Exception ex) { AppLog.Write("save-position", ex); ToolTip = CaptureToolTip("Não foi possível lembrar a posição da barra. Tente novamente."); } }
     void Configure() { if (busy || Active) { UserMessages.Show(this, "Salve ou descarte a gravação antes de alterar as configurações."); return; } collapseTimer.Stop(); new SettingsWindow(settings) { Owner = this }.ShowDialog(); Render(); }
     bool TryExcludeControls()
     {
@@ -218,7 +220,7 @@ internal sealed class MainWindow : Window
         row.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = paused ? Brushes.Goldenrod : Brushes.OrangeRed, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 7, 0) });
         var status = new TextBlock { Text = transient.Length > 0 ? transient : paused ? "Pausado" : "Gravando", Foreground = ink, FontSize = 12, Width = 154, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
         AutomationProperties.SetAutomationId(status, "RecordingStatus"); row.Children.Add(status);
-        duration = new TextBlock { Text = DurationText(), Foreground = Brushes.White, FontFamily = new FontFamily("Consolas"), FontSize = 14, Width = 78, VerticalAlignment = VerticalAlignment.Center, ToolTip = "Tempo efetivamente gravado" };
+        duration = new TextBlock { Text = DurationText(), Foreground = Brushes.White, FontFamily = new FontFamily("Consolas"), FontSize = 14, Width = 78, VerticalAlignment = VerticalAlignment.Center, ToolTip = CaptureToolTip("Tempo efetivamente gravado") };
         AutomationProperties.SetAutomationId(duration, "RecordingDuration"); row.Children.Add(duration);
         void Separator() => row.Children.Add(new Border { Width = 1, Height = 24, Background = new SolidColorBrush(Color.FromRgb(66, 67, 85)), Margin = new Thickness(7, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
         Separator();
@@ -229,7 +231,7 @@ internal sealed class MainWindow : Window
         Separator();
         var discard = IconButton("Descartar gravação", "M2,2 L18,18 M18,2 L2,18", () => _ = Discard(), 36);
         discard.IsEnabled = !busy; row.Children.Add(discard);
-        ToolTip = paused ? "Gravação pausada. Continue quando estiver pronto." : "Ctrl+Shift+P: pausar/retomar · Ctrl+Shift+F: parar e salvar";
+        ToolTip = CaptureToolTip(paused ? "Gravação pausada. Continue quando estiver pronto." : "Ctrl+Shift+P: pausar/retomar · Ctrl+Shift+F: parar e salvar");
         if (!sessionPositioned) PlaceRecordingBar();
         else Native.ClampToWorkArea(this);
     }
