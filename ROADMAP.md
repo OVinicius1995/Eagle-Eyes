@@ -157,3 +157,11 @@ Concluído. Instalador 1.2.1 gerado e validado fora do repositório com 25 verif
 Usuário confirmou o funcionamento da 1.2.1 em outro PC limpo. Implementada a limpeza somente da sessão publicada; em validação.
 Concluído localmente. Core: 70 verificações com captura real/falhas (.test-artifacts/qa-4481d6581f924a9b8f4dbef8cbfee879). Diálogo aprovado. Atualização instalada 1.2.1→1.2.2, gravação com duas pausas e pasta contendo apenas o MP4 H.264 sem áudio (.test-artifacts/installer-a63033fb6d794a35a7d5180d5db02692). Vídeos e preferências anteriores preservados. Para o teste remoto, publicar o Setup e SHA256 como release estável e consultar pelo outro PC.
 Release v1.2.2 publicada. A API pública releases/latest retornou v1.2.2 e o SHA256 do instalador publicado corresponde ao pacote testado. Pendente somente o teste de notificação no outro PC do usuário.
+
+## Retomada após a reinicialização — 18/11/2026
+
+A versão [1.2.2](https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.2.2) está publicada. A tag aponta para 5352b10. O último push conferido na branch feature/ux-1.1 foi f7e5f79 e o instalador publicado tem o mesmo SHA256 do pacote testado. O guia privado continua protegido pelo .gitignore.
+
+O usuário confirmou que a 1.2.1 funciona no outro PC. No ambiente de teste, a atualização de 1.2.1 para 1.2.2 passou e uma gravação com duas pausas deixou somente o MP4 na pasta de saída. A prova de falha confirmou que os trechos foram preservados.
+
+**Próximo passo no outro PC:** com a 1.2.1 instalada, abrir Configurações → Verificar atualizações e confirmar que aparece a 1.2.2. Baixar o instalador pela opção Abrir versão, sair do Eagle Eyes e instalar. Gravar um vídeo em uma pasta vazia, pausar, retomar e salvar. Confirmar que o MP4 reproduz e que a pasta contém apenas o vídeo. Registrar aqui o resultado informado pelo usuário.
