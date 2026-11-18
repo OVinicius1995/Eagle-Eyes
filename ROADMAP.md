@@ -152,3 +152,7 @@ Pendências opcionais futuras: download validado e aplicação integrada, assina
 ## 1.2.1 — instalação pronta para gravar
 Implementados download obrigatório com hash fixo, pasta gerenciada e resolução do motor. Aguardando prova de instalação e captura.
 Concluído. Instalador 1.2.1 gerado e validado fora do repositório com 25 verificações. O assistente baixou o motor, o aplicativo instalado gravou com duas pausas e o ffprobe instalado confirmou MP4 H.264 sem áudio. Desinstalação preservou os arquivos particulares e as preferências. Evidências em .test-artifacts/installer-d41d4131d9cb41cbabc4fd5933f81285. Pacote: 5cf6c59d9f3a9e5eadfa6261fea148f826d17278b84df61b9ae1de4bb95242fc  EagleEyes-1.2.1-win-x64-Setup.exe. Próximo passo: validação manual e eventual publicação. Instalação exige internet; captura é local.
+
+## 1.2.2 — limpeza após salvar
+Usuário confirmou o funcionamento da 1.2.1 em outro PC limpo. Implementada a limpeza somente da sessão publicada; em validação.
+Concluído localmente. Core: 70 verificações com captura real/falhas (.test-artifacts/qa-4481d6581f924a9b8f4dbef8cbfee879). Diálogo aprovado. Atualização instalada 1.2.1→1.2.2, gravação com duas pausas e pasta contendo apenas o MP4 H.264 sem áudio (.test-artifacts/installer-a63033fb6d794a35a7d5180d5db02692). Vídeos e preferências anteriores preservados. Para o teste remoto, publicar o Setup e SHA256 como release estável e consultar pelo outro PC.

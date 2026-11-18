@@ -22,7 +22,7 @@ Parar e salvar funciona gravando ou pausado, sem confirmação adicional. Após 
 
 Arraste por qualquer área não interativa das barras, inclusive o cronômetro. Botões/campos não iniciam arraste e existe um limiar de movimento. A barra principal mantém encaixe nas quatro bordas e recolhimento; a barra da sessão permanece horizontal e acessível.
 
-O vídeo usa H.264 a 15 fps, cursor e nenhuma faixa de áudio. As pausas viram trechos separados, reunidos em MP4 único sem o intervalo pausado. Temporários são mantidos após salvar ou em erro; remova-os manualmente somente depois de conferir a saída. O descarte confirmado é a operação explícita que remove os arquivos conhecidos da sessão. Quadros ausentes não são recuperáveis.
+O vídeo usa H.264 a 15 fps, cursor e nenhuma faixa de áudio. As pausas viram trechos separados, reunidos em MP4 único sem o intervalo pausado. Depois de validar e salvar o MP4, o aplicativo limpa os temporários daquela gravação. Se a finalização falhar, a pasta é preservada para recuperação. Quadros ausentes não são recuperáveis.
 
 Mensagens principais são breves; Ver detalhes e logs em `%LOCALAPPDATA%\EagleEyes\logs` guardam informações técnicas. Consulte o checkpoint UX 1.1 no ROADMAP antes de retomar uma sessão de desenvolvimento.
 ## Compilar e verificar

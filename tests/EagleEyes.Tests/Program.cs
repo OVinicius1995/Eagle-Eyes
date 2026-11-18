@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.Json;
 using EagleEyes.Core;
 
@@ -56,7 +56,9 @@ if (args.Contains("--live"))
     Assert(Math.Abs((session.RecordedDuration - pausedDuration).TotalSeconds) < .1, "Duration frozen during second pause");
     await session.ResumeAsync();
     await Task.Delay(1800);
+    var firstDirectory = session.RecoveryDirectory!;
     var output = await session.StopAsync();
+    Assert(!Directory.Exists(firstDirectory) && session.RecoveryDirectory == null, "Successful save removes current session folder");
     Assert(File.Exists(output) && new FileInfo(output).Length > 1000, "Final MP4 exists after two pauses");
     var start = new ProcessStartInfo(ffprobe) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
     foreach (var arg in new[] { "-v", "error", "-show_streams", "-show_format", "-of", "json", output }) start.ArgumentList.Add(arg);
@@ -81,7 +83,10 @@ if (args.Contains("--live"))
     Assert(session.RecordedDuration.TotalSeconds < 2, "Reused session resets recorded duration");
     await Task.Delay(1200);
     await session.PauseAsync();
+    var extra = Path.Combine(session.RecoveryDirectory!, "unknown.txt");
+    File.WriteAllText(extra, "User file");
     var secondOutput = await session.StopAsync();
+    Assert(File.Exists(secondOutput) && File.Exists(extra) && session.RecoveryDirectory != null, "Partial cleanup preserves published MP4 and unknown file");
     Assert(secondOutput != output, "Second recording receives a unique final filename");
     Assert(File.ReadAllBytes(output).SequenceEqual(originalBytes), "First MP4 remains unchanged");
     start.ArgumentList[start.ArgumentList.Count - 1] = secondOutput;

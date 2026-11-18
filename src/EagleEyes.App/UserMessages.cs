@@ -61,10 +61,12 @@ internal static class UserMessages
         return window.ShowDialog() == true;
     }
 
-    internal static void Saved(Window owner, string output)
+    internal static void Saved(Window owner, string output, string? remainingDirectory = null)
     {
         var (window, panel, actions) = Create(owner, "Eagle Eyes", "Seu vídeo foi salvo!");
         panel.Children.Insert(1, new TextBlock { Text = Path.GetFileName(output), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0), Foreground = (Brush)window.Resources["EagleEyes.Text.Muted"] });
+        if (remainingDirectory != null)
+            panel.Children.Insert(2, new TextBlock { Text = $"Alguns arquivos de trabalho ficaram nesta pasta: {remainingDirectory}", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) });
         var open = Button("Abrir pasta", window.Resources);
         open.Click += (_, _) =>
         {

@@ -311,9 +311,10 @@ internal sealed class MainWindow : Window
         try
         {
             var output = await session.StopAsync();
+            var remainingDirectory = session.RecoveryDirectory;
             session.Dispose(); session = null; selectedArea = null; transient = "";
             Render();
-            UserMessages.Saved(this, output);
+            UserMessages.Saved(this, output, remainingDirectory);
         }
         catch (Exception ex) { ReleaseFault(ex, "save"); }
         finally { busy = false; transient = ""; Show(); Render(); }

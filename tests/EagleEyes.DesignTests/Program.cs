@@ -97,7 +97,7 @@ internal static class Program
                 catch (Exception error) { failure = error; dialog?.Close(); }
             };
             timer.Start();
-            saved.Invoke(null, [owner, Path.Combine(artifacts, "Evidencia-de-teste.mp4")]);
+            saved.Invoke(null, [owner, Path.Combine(artifacts, "Evidencia-de-teste.mp4"), null]);
             if (failure != null) throw failure;
             var releaseType = assembly.GetType("EagleEyes.App.UpdateRelease", true)!;
             var release = Activator.CreateInstance(releaseType, [new Version(1, 3, 0), new Uri("https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.3.0")]);

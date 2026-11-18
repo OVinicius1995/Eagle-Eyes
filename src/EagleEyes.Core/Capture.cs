@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -124,7 +124,7 @@ public sealed class RecordingSession : IDisposable
                 }
                 discardable = false;
                 State = RecordingState.Idle;
-                // Keep session segments deliberately for explicit recovery/inspection; never delete before verification.
+                if ((await Task.Run(DeleteOwnedSessionFiles)).Complete) RecoveryDirectory = null;
             }
             catch { State = RecordingState.Faulted; throw; }
         });

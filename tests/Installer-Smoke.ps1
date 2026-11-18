@@ -12,19 +12,19 @@ function RunSetup([string]$file){$p=Start-Process $file -ArgumentList @('/VERYSI
 $prefs=Join-Path $env:LOCALAPPDATA 'EagleEyes\settings.json'; $before=if(Test-Path $prefs){(Get-FileHash $prefs).Hash}else{''}
 $failure=$null
 try {
-    if($BaselineInstaller){RunSetup $BaselineInstaller; Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.1.0.0') 'Baseline 1.1.0 installed'}
+    if($BaselineInstaller){RunSetup $BaselineInstaller; Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.1.0') 'Baseline 1.2.1 installed'}
     if(!(Test-Path $app)){New-Item -ItemType Directory -Force $app | Out-Null}
     New-Item -ItemType Directory -Force "$app\ffmpeg" | Out-Null
     'external component sentinel' | Set-Content "$app\ffmpeg\user-component.txt"
     'user video sentinel' | Set-Content "$app\prior-video.mp4"
     RunSetup $Installer
-    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.1.0') 'Installed 1.2.1 executable'
+    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.2.0') 'Installed 1.2.2 executable'
     Assert (Test-Path "$app\coreclr.dll") 'Self-contained runtime present'
     Assert (Test-Path "$app\Assets\eagle-eyes.ico") 'Official icon installed'
     Assert (!(Test-Path "$app\docs\IDENTIDADE-VISUAL.md")) 'Private guide absent'
     Assert (Test-Path "$app\ffmpeg\user-component.txt") 'External component preserved on upgrade'
     Assert (Test-Path "$app\prior-video.mp4") 'Existing user video preserved on upgrade'
-    Assert ((Get-ItemProperty $key).DisplayVersion -eq '1.2.1') 'Per-user uninstall registration updated'
+    Assert ((Get-ItemProperty $key).DisplayVersion -eq '1.2.2') 'Per-user uninstall registration updated'
     $link=Join-Path ([Environment]::GetFolderPath('Programs')) "Eagle Eyes\Eagle Eyes.lnk"
     Assert (Test-Path $link) 'Start menu shortcut created'
     $shortcut=(New-Object -ComObject WScript.Shell).CreateShortcut($link)
@@ -43,6 +43,7 @@ try {
     if(!$process.WaitForExit(60000)){throw 'Recording proof timed out'}
     $video=Get-Content $proof -TotalCount 1
     Assert (Test-Path -LiteralPath $video -PathType Leaf) 'Installed app saved a recording after two pauses'
+    Assert (@(Get-ChildItem $capture -Force).Count -eq 1) 'Only final video remains in recording folder'
     $media=(& "$engine\ffprobe.exe" -v error -show_streams -show_format -of json $video | Out-String | ConvertFrom-Json)
     Assert ($media.streams.Count -eq 1 -and $media.streams[0].codec_name -eq 'h264' -and [double]::Parse($media.format.duration,[cultureinfo]::InvariantCulture) -gt 0) 'MP4 contains H.264 video only'
     $mutex=[Threading.Mutex]::new($true,'Local\EagleEyes.Desktop')

@@ -1,4 +1,4 @@
-﻿param([ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version='1.0.0')
+﻿param([ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version='1.0.0', [switch]$Installer)
 $ErrorActionPreference='Stop'
 $repoRoot=Split-Path $PSScriptRoot -Parent
 $git=(Get-Command git -ErrorAction SilentlyContinue).Source
@@ -8,6 +8,12 @@ function Git-Run([string[]]$Arguments){& $git -c "safe.directory=$repoRoot" -C $
 $tag="v$Version"
 $releaseRoot=Join-Path $repoRoot "artifacts\releases\$tag"
 $assets=@((Join-Path $releaseRoot "Eagle-Eyes-$tag-win-x64.zip"),(Join-Path $releaseRoot "Eagle-Eyes-$tag-win-x64.zip.sha256"))
+if($Installer){
+    $setup=Join-Path $repoRoot "artifacts\installer\$Version\EagleEyes-$Version-win-x64-Setup.exe"
+    $assets=@($setup,"$setup.sha256")
+    $expectedLine=(Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+[IO.Path]::GetFileName($setup)
+    if(([IO.File]::ReadAllText("$setup.sha256")).Trim() -cne $expectedLine){throw 'SHA256 do instalador divergente.'}
+}
 foreach($asset in $assets){if(!(Test-Path -LiteralPath $asset)){throw "Prepare o pacote antes: $asset"}}
 if(Git-Run -Arguments @('status','--porcelain')){throw 'Commit pendente: a árvore de trabalho precisa estar limpa.'}
 $sha=(Git-Run -Arguments @('rev-parse','HEAD')).Trim()
@@ -24,7 +30,7 @@ try{
     $tags=Git-Run -Arguments @('tag','--list',$tag)
     if($tags){$tagSha=(Git-Run -Arguments @('rev-list','-n','1',$tag)).Trim();if($tagSha-ne $sha){throw 'A tag já aponta para outro commit; não será alterada.'}}
     else{Git-Run -Arguments @('tag','-a',$tag,'-m',"Eagle Eyes $Version")}
-    Git-Run -Arguments @('push','--atomic','-u','origin','main',"refs/tags/$tag")
+    if($Installer){Git-Run -Arguments @('push','origin',"refs/tags/$tag")} else {Git-Run -Arguments @('push','--atomic','-u','origin','main',"refs/tags/$tag")}
     $release=$null
     try{$release=Invoke-RestMethod -Uri "$api/releases/tags/$tag" -Headers $headers}catch{if([int]$_.Exception.Response.StatusCode-ne 404){throw}}
     if(!$release){
