@@ -64,3 +64,6 @@ Salvar checkpoints no ROADMAP e commits locais. Próximos testes: pixels/ICO ver
 
 ## Retomada da marca após pausa
 Líder assume os arquivos de QA para conclusão sequencial, pois o agente ficou indisponível. Código integrado compila; testes de marca 88PASS já salvos. Não regenerar/recolorir assets aprovados. Ver seção final de ROADMAP para os poucos passos restantes. Marca aplicada globalmente por Branding.Initialize/Apply e TrayIcon nativo; diagnóstico --ux-test --branding-report <json> registra Shell e recurso. Nenhuma publicação nova autorizada.
+
+## Estado final da marca e configurações
+Etapa concluída, testes e executável local atualizados. PNG/ICO oficiais preservados, ícones funcionais separados, FFmpeg somente pastas padrão e alerta de ausência. Não retomar como pendente a correção do TextBox: foi corrigida e UIA repetido. Próximo pedido deve partir do checkpoint final em ROADMAP; não publicar sem autorização. Core não alterado. O líder assumiu o QA indisponível e todos os arquivos podem ser mantidos pelo líder na próxima etapa.

@@ -86,21 +86,26 @@ A exclusão dos controles foi comprovada neste Windows/FFmpeg; não constitui ga
 O saldo total não é visível ao líder. Manter etapas concluídas, testes, pendências e próximo passo neste arquivo e salvar commits locais frequentes. Se agente/ferramenta informar limite ou o usuário pedir pausa, salvar checkpoint e encerrar. O usuário restaurou o limite para concluir esta etapa; a interrupção anterior não perdeu alterações.
 
 ## Marca oficial, ícones e configurações - checkpoint atual
-Estado: retomado após pausa do usuário; alterações preservadas. Agente QA indisponível por limite anterior; líder assume a conclusão sequencial. Nenhum push ou novo release autorizado.
-- [x] Fonte aprovada preservada; cópia canônica com SHA256 idêntico.
-- [x] Conversão local sem redesenho/recoloração: PNG1024 transparente com olhos vazados e largura85%; ICO verdadeiro32bits com16/20/24/32/48/64/128/256.
-- [x] Engrenagem preenchida compacta de oito dentes/furo, X14DIP e família vetorial coesa; CaptureSafeToolTip preservado.
-- [x] Configurações escuras, Salvar/Cancelar, sem campo FFmpeg; par de executáveis nas pastas padrão, sem PATH/CWD/configuração antiga.
-- [x] Marca no EXE, todas as janelas e bandeja nativa com Mostrar controles/Sair protegido.
-- [x] Corrigido corte vertical do campo de saída no template; preview novo legível, build Debug integrado passou sem avisos/erros.
-- [x] Testes independentes de marca/caminhos/vetores/HICON: 88 aprovados em `.test-artifacts/branding-8f6252ac81c94105b2161e12a17f639d/result.json` (Failure null). Fonte mediana RGB93/118/123, saída opaca93/117/122; sem recoloração, diferença de reamostragem.
-- [x] UIA anterior em `.test-artifacts/brand-ui-ace634ac70f742e79e82df6ad892ce58`: campos, Salvar/Cancelar e preferências, HICON small/big de Main/Settings, Shell registrou bandeja; callbacks Mostrar/Sair, cancelar saída restaurou gravação, descarte confirmado saiu sem MP4. Teste de callback nativo via PostMessage, não clique físico no ícone da bandeja.
-- [ ] Repetir teste focado de configurações após ajuste visual do TextBox e verificar alerta de componentes ausentes em execução isolada.
-- [ ] Build Release e atualização do executável de entrega, conferindo ICO copiado e HICON do EXE publicado.
-- [ ] Consolidar docs/QA/README e commit final.
+Estado: etapa concluída localmente. Branch feature/ux-1.1; release público v1.0.0 preservado. Sem push ou nova publicação.
+- [x] Fonte aprovada preservada em seu nome original e cópia canônica eagle-eyes-original.png, SHA256 idêntico.
+- [x] Conversão exclusivamente local sem redesenho/recoloração: branco/olhos transparentes, antialias sem halo branco aparente, PNG1024 centralizado com85,06% da largura.
+- [x] ICO verdadeiro de32bits com16/20/24/32/48/64/128/256, payloads/offsets válidos, alfa transparente/opaco/semitransparente em todos.
+- [x] Engrenagem preenchida compacta com oito dentes/furo em14DIPs, X coeso e demais ícones vetoriais; CaptureSafeToolTip preservado.
+- [x] Configurações escuras com marca, Salvar/Cancelar e sem campo de pasta FFmpeg. Par nas pastas padrão, sem PATH/CWD/configuração antiga. Alerta quando faltar o par.
+- [x] Marca no EXE, janelas e bandeja nativa com Mostrar controles/Sair e encerramento protegido. Sem instalador/gerador de atalhos existente.
+- [x] Corrigido corte do campo de saída; preview legível e novo teste de edição/Salvar/Cancelar aprovado após a correção.
+- [x] Build Debug e Release sem erros/avisos; nove verificações básicas do Core. Core/captura não alterado nesta etapa.
+- [x] Executável atualizado em artifacts/eagle-eyes/EagleEyes.App.exe; ICO copiado para Assets ao lado dele e conferido por hash contra a fonte.
 
-### Próximo passo exato
-Código e testes estão consistentes: build Debug da solução com cinco projetos passou. Os 88 testes de marca já foram executados e salvos; não refazer conversão da imagem. Rodar `tests/UI-Branding.ps1 -RequireBrandingReport` para edição/Salvar/Cancelar após a correção visual (sem repetir TrayGuard completo já aprovado). Para alerta de FFmpeg ausente, usar cópia do aplicativo em pasta temporária fora dos ancestrais do repositório, sem ffmpeg, e tentar Gravar; jamais renomear componentes de uma sessão do usuário.
-Depois executar Build.ps1 para Release/local e testes de marca com --exe no EXE publicado. Atualizar pendências e salvar commit final, sem push/release. Preview correto em `.test-artifacts/ui-brand-preview/settings-preview.png`. Documentação de proveniência/transformação em docs/BRANDING.md.
+### Evidências concluídas
+- Marca/caminhos/vetores/EXE publicado:88 asserções em `.test-artifacts/branding-6e9402454d00405fb7766efd1f537060/result.json`. ICO com oito entradas reais, PNG1024 com dois olhos vazados, proporção/centro e cores preservadas; HICON do EXE corresponde à máscara do ICO oficial. Fonte mediana RGB93/118/123, saída opaca93/117/122, diferença de reamostragem sem recoloração.
+- Comparações claro/escuro e ícones16..256 inspecionados em `.test-artifacts/brand-preview/light-dark-contact-sheet.png`. Preview final das configurações e galeria vetorial em `.test-artifacts/ui-brand-preview`.
+- UIA final depois do ajuste visual: `.test-artifacts/brand-ui-ebee00d946c44c29a1d3e31ed5cd2f02`. Uma caixa de texto para saída, nenhum campo FFmpeg, marca presente, habilitação de monitor por modo, persistência/Cancelar sem alterar preferências, HICON small/big Main/Settings, Mostrar controles e Sair ocioso aprovados. Preferências originais restauradas.
+- Proteção da bandeja durante gravação já aprovada em `.test-artifacts/brand-ui-ace634ac70f742e79e82df6ad892ce58`: cancelar saída restaurou gravação; confirmar descarte fechou sem gerar MP4. Callbacks nativos testados por PostMessage controlado, não clique físico no ícone do Explorer.
+- Componentes ausentes:5 verificações em `.test-artifacts/missing-components-59657344a2d94093b23435f92699daa6`. Aplicativo isolado fora do repositório, sem FFmpeg: alerta correto, nenhuma seleção/encoder iniciado, retorno à barra e fechamento normal. Nenhum componente do usuário foi movido/apagado.
+- Release runtime:9 relatórios `.test-artifacts/brand-release-smoke*.json` com estados/área útil/hit tests aprovados; `.test-artifacts/brand-release-report.json` confirmou bandeja registrada, ICO presente e ícone de janela256px. Processo encerrou sem erro.
 
-Preservar todos os recursos de captura UX1.1; Core não foi alterado nesta etapa. Permanecem testes manuais de escalas125%/150%, múltiplos monitores, ícone em atalhos externos criados pelo usuário e posição da bandeja/overflow controlada pelo Windows.
+### Checkpoints e continuidade
+Checkpoint e84d775 preservou todos os arquivos antes da retomada final. O agente QA ficou indisponível e o líder concluiu sequencialmente, sem descartar resultados anteriores. Proveniência e transformação detalhadas em docs/BRANDING.md; resultados em docs/QA.md. Nenhuma imagem enviada a conversores externos.
+Próximo passo ao retornar: ler AGENTS/ROADMAP, conferir Git/processos e aguardar a validação manual do usuário pelo Iniciar.cmd. Nenhuma implementação ficou em andamento. Não refazer assets nem a regressão inteira sem mudança relevante. Novo release/push depende de pedido do usuário.
+Pendências manuais: outras escalas125%/150%, DPI misto/múltiplos monitores e aparência/posição real do ícone na bandeja/overflow, controlada pelo Windows. Ícones de atalhos externos eventualmente criados pelo usuário não foram testados; não existe instalador nesta versão.

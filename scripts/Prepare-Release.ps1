@@ -26,7 +26,7 @@ Eagle Eyes $Version - Windows x64
 3. Obtenha uma distribuição Windows de FFmpeg com gdigrab e libx264.
    FFmpeg e FFprobe são dependências externas e não estão incluídos.
    Coloque ffmpeg.exe e ffprobe.exe em uma subpasta chamada ffmpeg ao lado
-   de EagleEyes.App.exe, ou indique a pasta nas configurações do aplicativo.
+   de EagleEyes.App.exe. Não há seleção manual dessa pasta na interface.
    Preserve licenças/avisos da distribuição obtida; veja docs/DEPENDENCIES.md.
 4. Abra EagleEyes.App.exe.
 
