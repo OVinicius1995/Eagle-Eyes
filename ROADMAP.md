@@ -40,22 +40,39 @@ A aprovação geral do usuário não substitui evidência individual desses cen�
 
 ## UX 1.1 - checkpoint de retomada
 Branch: feature/ux-1.1. Base publicada preservada: v1.0.0; HEAD inicial 383034b.
-Estado: implementação iniciada, sem nova publicação autorizada.
+Estado: checkpoint interrompido por limite de uso informado pelo agente QA; implementação salva, validação final pendente, sem nova publicação autorizada.
 
 ### Etapas
 - [x] Inspeção do código existente e Git limpo; contratos/arquivos definidos em AGENTS.md antes de distribuir.
-- [x] Core: descarte serializado com proteção dos arquivos de outras sessões; 58 verificações reais aprovadas, incluindo reparse/symlink e arquivos desconhecidos.
-- [x] Implementada seleção: instrução, Espaço no monitor do ponteiro, Esc e consumo das teclas. Validação UI real ainda pendente.
-- [x] Implementada preparação: área destacada, barra persistente, iniciar/reselecionar/cancelar. Validação UI real ainda pendente.
-- [x] Implementada contagem central 3,2,1, anel verde e Esc voltando à preparação. Remoção e espera do compositor antes do início; prova em vídeo ainda pendente.
-- [x] Implementado arraste por áreas não interativas com limiar e ajuste à área útil. QA por mouse ainda pendente.
-- [x] Integrada barra horizontal sempre visível com estado textual, cronômetro, pausa/retomada e salvar. Cronômetro por progresso FFmpeg implementado; regressão dessa mudança em execução.
-- [x] Integrada confirmação de descarte com pausa prévia, restauração de estado e exclusão restrita. Cenários pela UI ainda pendentes.
+- [x] Core: descarte serializado com proteção dos arquivos de outras sessões; 68 verificações reais aprovadas, incluindo reparse/symlink e arquivos desconhecidos.
+- [x] Implementada seleção: instrução, Espaço no monitor do ponteiro, Esc e consumo das teclas. Validação UI real aprovada no monitor atual.
+- [x] Implementada preparação: área destacada, barra persistente, iniciar/reselecionar/cancelar. Validação UI real aprovada no monitor atual.
+- [x] Implementada contagem central 3,2,1, anel verde e Esc voltando à preparação. Remoção e espera do compositor antes do início; prova em vídeo aprovada no monitor atual.
+- [x] Implementado arraste por áreas não interativas com limiar e ajuste à área útil. QA por mouse aprovado em fundo, preparação e cronômetro.
+- [x] Integrada barra horizontal sempre visível com estado textual, cronômetro, pausa/retomada e salvar. Cronômetro por progresso real FFmpeg implementado e validado, inclusive zero sem quadros codificados.
+- [x] Integrada confirmação de descarte com pausa prévia, restauração de estado e exclusão restrita. Cenários pela UI aprovados.
 - [x] Integradas mensagens breves, detalhes/logs, sucesso após validação e ação Abrir pasta.
-- [ ] Build e testes de regressão/Core/UI, exclusão real das barras/contagem no gdigrab e MP4 sem áudio.
+- [x] Build Debug/Release e Core: 68 asserções reais. Functional UI PASS: seleção, Esc, contagem, pausas, salvar, descarte/cancelamento e MP4 sem áudio. Exclusão da barra REAL comprovada com controle positivo, pixels e primeiro frame de MP4; contagem ausente. Arraste real aprovado. Atenção: exclusão de TOOLTIP ainda pendente; ver próximo passo.
 - [ ] Executável local e commit de entrega; documentar pendências visuais/hardware.
 
-### Próximo passo exato
-Build integrado Debug e Release passou sem erros/avisos. Executar tests/UI-Flow.ps1 após fechamento da instância antiga PID41228 do usuário; pedido de fechamento enviado e ainda sem confirmação. Não encerrar essa instância sem autorização: pode haver gravação ativa. QA preparou modos funcional/exclusão/controle positivo com fundo magenta para provar a barra real excluída por gdigrab e contagem ausente do MP4. Core está concluindo testes de arquivo bloqueado e cronômetro por progresso FFmpeg. Após estabilizar fontes: salvar commit local da integração, executar QA, corrigir falhas encontradas e publicar executável em pasta isolada (não sobrescrever app aberto). Não publicar novo release nem enviar a branch sem pedido.
+### Próximo passo exato - retomar aqui
+1. Conferir Git na branch feature/ux-1.1 e ler AGENTS.md seção UX1.1. A tag/release pública v1.0.0 permanece preservada. Não publicar a 1.1 nem fazer push sem pedido.
+2. CORRIGIR BUG PENDENTE: barra horizontal desaparece do vídeo com WDA, mas os tooltips WPF ainda aparecem. Evidência inspecionada: .test-artifacts/ux11-ui-c064ee90ebad4430bc4e8550121f56b3/Exclusion/actualbar-gdigrab.png mostra tooltip branco dos atalhos sobre fundo magenta, embora a barra tenha sido excluída. NÃO declarar exclusão completa dos controles.
+3. Correção ainda NÃO implementada: em MainWindow.cs, substituir ToolTip strings de IconButton, duração e Window.ToolTip por ToolTip explícito; em Opened, obter HwndSource de PresentationSource.FromVisual(tooltip) e tentar WDA no HWND do popup. Se não funcionar, definir comportamento previsível sem tooltip capturado, mantendo orientação acessível. Considerar helper CaptureSafeToolTip.cs. Não basta retorno da API.
+4. Validar tooltips reais (fundo/estado, Pausar, cronômetro) com controle positivo --ux-test --disable-capture-exclusion versus WDA padrão, fundo magenta, bounding rectangle do ToolTip via UIAutomation e pixels no gdigrab E em quadro do MP4. QA estava preparando esse cenário, mas recebeu limite de uso antes de concluir. Conferir se existe implementação parcial em tests/UI-Flow.ps1 antes de alterar. Se agentes continuarem indisponíveis, executar sequencialmente.
+5. Após corrigir: build Debug/Release, repetir SOMENTE provas afetadas de exclusão/popup, atualizar documentação e executável local, salvar commit de entrega. Não repetir toda a regressão sem mudança relevante.
 
-Retomada: ler AGENTS.md seção UX1.1 e esta seção antes de agir; verificar Git e processos. Não repetir provas já aprovadas sem mudança relevante. O usuário pediu checkpoints frequentes; saldo de uso não é acessível ao agente.
+### Resultados já aprovados / não refazer sem motivo
+- Core final: 68 asserções Release --live --faults, artefatos .test-artifacts/qa-11065829dcf846d0ae925c047a63820c. Inclui relógio por out_time_us, descarte seguro, arquivo bloqueado, symlinks reais e isolamento entre sessões.
+- Functional UI: .test-artifacts/ux11-ui-b2e708ac98b04a4caf913d91e062b445. Seleção mouse/Espaço, Esc seleção e contagem, preparação persistente, 3/2/1 sem arquivos, pausas e relógio, salvar, cancelamento de descarte restaurando gravando/pausado, descarte confirmado preservando vídeo anterior; MP4 sem áudio, 15 fps e decodificação.
+- Drag: .test-artifacts/ux11-ui-4b8694a5c0354c32bbc55d18b249eb4d. Fundo principal, preparação e cronômetro arrastáveis com limiar; clique em Pausar não arrasta; salvar pausado aprovado.
+- Exclusão do CORPO da barra real: controle positivo ux11-ui-feeb35826c204e889bfaedf6ebcaacf4 e WDA ux11-ui-c064ee90ebad4430bc4e8550121f56b3. Área da barra apresentou fundo magenta com WDA, mas popup tooltip fora da área amostrada vazou. Centro do primeiro frame sem contagem e ausência de segmentos durante 3/2/1 aprovados.
+- Build final local: scripts/Build.ps1 passou sem erros/avisos e 9 verificações básicas; artifacts/eagle-eyes/EagleEyes.App.exe é 1.1.0 local. Ainda NÃO é entrega final por causa dos tooltips.
+- Smoke do executável Release: 9 relatórios .test-artifacts/ux11-release-smoke*.json, quatro bordas expandida/recolhida a 100%, posição visível e hit tests WPF aprovados.
+- Instância antiga PID41228 estava ociosa e foi fechada normalmente pelo próprio botão após autorização. Nenhum processo de teste deveria permanecer; conferir novamente ao retomar.
+
+### Pendências de ambiente
+DPI 125%/150%, DPI misto e múltiplos monitores/negativos/desconexão, cursor visual, player do Windows, clique real através da janela e inspeção detalhada da animação ainda não possuem evidência individual. Não converter aprovação geral em certificação desses cenários.
+
+### Motivo do encerramento deste checkpoint
+Agente QA reportou explicitamente limite de uso. O usuário pediu salvar etapas e interromper antes de esgotar o tempo, para retomar após restaurar. Código e testes estão salvos em commits locais; a próxima sessão deve começar pela correção dos tooltips acima. Saldo de uso total não é visível ao líder.

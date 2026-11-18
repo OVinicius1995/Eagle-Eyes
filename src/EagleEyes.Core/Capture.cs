@@ -217,7 +217,8 @@ public sealed class RecordingSession : IDisposable
         var marker = Path.Combine(directory, "session.json");
         if (!ownedFiles.Contains(marker) || (File.GetAttributes(marker) & FileAttributes.ReparsePoint) != 0) return false;
         using var document = JsonDocument.Parse(File.ReadAllText(marker));
-        return document.RootElement.TryGetProperty("OwnershipId", out var id) && id.GetString() == ownershipId;
+        return document.RootElement.ValueKind == JsonValueKind.Object &&
+            document.RootElement.TryGetProperty("OwnershipId", out var id) && id.ValueKind == JsonValueKind.String && id.GetString() == ownershipId;
     }
 
     DiscardResult DeleteOwnedSessionFiles()
@@ -269,7 +270,7 @@ public sealed class RecordingSession : IDisposable
         await Task.Delay(500);
         if (capture.HasExited)
         {
-            await stderrTask;
+            await FinishCaptureReaders();
             throw new IOException($"FFmpeg não iniciou a captura. {Log()}");
         }
         segments.Add(path);
@@ -300,7 +301,7 @@ public sealed class RecordingSession : IDisposable
         {
             Interlocked.Exchange(ref segmentMicroseconds, 0);
             // Keep the process handle on failed shutdown so DiscardAsync can still stop it.
-            if (p.HasExited) { p.Dispose(); capture = null; }
+            if (p.HasExited) { await FinishCaptureReaders(); p.Dispose(); capture = null; }
         }
     }
     async Task<TimeSpan> Validate(string path)
@@ -377,6 +378,7 @@ public sealed class RecordingSession : IDisposable
         disposed = true;
         captureReaders?.Cancel();
         Interlocked.Increment(ref captureGeneration);
+        _ = FinishCaptureReaders();
         if (capture != null) { try { if (!capture.HasExited) capture.Kill(true); } catch (InvalidOperationException) { } capture.Dispose(); }
         // Do not remove potentially recoverable files on dispose.
     }

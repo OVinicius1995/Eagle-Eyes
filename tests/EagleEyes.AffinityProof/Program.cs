@@ -11,10 +11,12 @@ internal static class Program
 {
     [StructLayout(LayoutKind.Sequential)] struct Rect { public int Left, Top, Right, Bottom; }
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int width, int height, uint flags);
     [DllImport("user32.dll", SetLastError = true)] static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
     [STAThread]
     static void Main(string[] args)
     {
+        if (args.Contains("--background")) { RunBackground(args); return; }
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
         var artifacts = Path.Combine(root, ".test-artifacts", "affinity-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(artifacts);
@@ -63,4 +65,20 @@ internal static class Program
             var count = 0; for (var i = 0; i < pixels.Length; i += 4) if (pixels[i] > 200 && pixels[i + 1] < 60 && pixels[i + 2] > 200) count++; return count;
         }
     }
-}
+    static void RunBackground(string[] args)
+    {
+        string Value(string name) { var i=Array.IndexOf(args,name);return i>=0&&i+1<args.Length?args[i+1]:throw new ArgumentException(name); }
+        var values=Value("--bounds").Split(',').Select(int.Parse).ToArray();
+        if(values.Length!=4||values[2]<=0||values[3]<=0)throw new ArgumentException("Bounds must be physical x,y,width,height");
+        var application=new Application();
+        var window=new Window{Title="Eagle Eyes QA magenta background",WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,ShowInTaskbar=false,ShowActivated=false,Topmost=true,Background=Brushes.Magenta,Left=values[0],Top=values[1],Width=values[2],Height=values[3]};
+        window.Loaded+=(_,_)=>{
+            var hwnd=new WindowInteropHelper(window).Handle;
+            SetWindowPos(hwnd,new IntPtr(-1),values[0],values[1],values[2],values[3],0x10);
+            GetWindowRect(hwnd,out var rect);
+            File.WriteAllText(Value("--ready"),JsonSerializer.Serialize(new{hwnd=hwnd.ToInt64(),rect.Left,rect.Top,rect.Right,rect.Bottom}));
+        };
+        application.Run(window);
+    }}
+
+

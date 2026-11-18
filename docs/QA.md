@@ -66,3 +66,50 @@ O líder executou `scripts/Build.ps1 -Live`: build Release da solução com zero
 O usuário informou que realizou os testes e autorizou a publicação. A preparação repetiu build Release (zero avisos/erros) e as 8 verificações básicas; o núcleo e a interface não sofreram alterações funcionais. A versão explícita e os metadados são 1.0.0. Acentuação da documentação corrigida.
 O aplicativo estava aberto e bloqueou a pasta habitual de publicação. O empacotamento passou a usar uma pasta isolada, sem encerrar o processo do usuário. ZIP inspecionado automaticamente: executável, DLLs, runtimeconfig, instruções e dependências presentes; sem FFmpeg, vídeos ou PDBs. SHA256 acompanha o pacote.
 Publicação concluída: GitHub Release v1.0.0 estável e público, main e tag enviados sem force push. ZIP público baixado novamente em memória e comparado ao SHA256 local: PASS. Nenhum binário FFmpeg ou vídeo de teste foi distribuído.
+
+## Checkpoint UX 1.1
+
+Os resultados acima pertencem à versão inicial e não aprovam a nova experiência automaticamente. A etapa UX 1.1 usa preparação, contagem separada, barra horizontal visível durante gravação, mensagens próprias e descarte seguro.
+
+Preparado `tests/UI-Flow.ps1` com cenários `Functional`, `ExclusionControl`, `Exclusion` e `All` (padrão). O roteiro faz backup das preferências, usa somente processos de teste e restaura as preferências no `finally`. Detecta uma instância já aberta e bloqueia antes de alterar configurações ou encerrar qualquer processo do usuário.
+
+- Functional: Esc na seleção, Espaço sem vazamento para Gravar, cancelar preparação, selecionar novamente, seleção por mouse, clique com jitter de 2 pixels sem arraste, Esc durante contagem voltando à preparação; observar 3/2/1 e ausência de novos segmentos enquanto a contagem existe; pausar/retomar, relógio congelado, cancelar descarte preservando estado anterior, salvar com mensagem própria e descartar próxima gravação preservando o MP4 anterior.
+- ExclusionControl: aplicativo real com `--ux-test --disable-capture-exclusion`, fundo magenta, gravação do monitor sob o ponteiro e captura gdigrab da barra visível; o controle positivo deve encontrar pixels da barra no vídeo.
+- Exclusion: repetir sem desabilitar a exclusão; comparar pixels do fundo magenta no retângulo da barra real, tanto em captura gdigrab quanto no primeiro frame do MP4. Essa prova vai além do retorno da API. A ausência de segmentos durante 3/2/1 verifica que a contagem precede a captura, sem depender de WDA para esconder um erro de ordem.
+
+O helper `tests/EagleEyes.AffinityProof --background --bounds x,y,w,h --ready arquivo.json` cria somente o fundo conhecido de teste. Os arquivos de evidência ficam em `.test-artifacts/ux11-ui-*` e não entram no Git.
+
+Estado deste checkpoint: scripts preparados e sintaxe PowerShell válida; helper compila sem erros/avisos. Execução real aguardando integração e fechamento voluntário da instância do usuário PID 41228. Nenhum processo desse usuário foi encerrado pelo QA. Ainda não declarar os cenários UX 1.1 aprovados.
+
+Checkpoint Core UX 1.1 informado pelo agente de captura: Release --live --faults PASS 60 asserções em .test-artifacts/qa-e6429fb82cfe49079ed50190e061c36e. Inclui descarte em gravação/pausa/falha, serialização, isolamento entre sessões, reparse points reais, falha de exclusão e limite de encerramento; relógio usa progresso out_time_us do FFmpeg. Este resultado não aprova a UI; testes visuais/reais continuam pendentes neste checkpoint.
+
+## Resultado final de QA UX 1.1 — 17/11/2026
+
+O bloqueio de instância foi resolvido pelo líder, fechando a versão antiga ociosa pelo próprio botão após aprovação. O QA não encerrou o processo do usuário à força. Os cenários abaixo foram executados contra o build Debug integrado 1.1.0 em desktop Windows interativo, um monitor 1920×1080, escala 100%. As preferências existentes foram restauradas depois de cada execução.
+
+| Cenário real | Resultado e evidência |
+|---|---|
+| Functional | PASS em `.test-artifacts/ux11-ui-b2e708ac98b04a4caf913d91e062b445/Functional`: Esc na seleção inicial e na reseleção volta à principal; Espaço seleciona o monitor sob o ponteiro e não aciona Gravar por vazamento de tecla; cancelar preparação; seleção por mouse de 640×360; clique real com movimento de 2 pixels em Gravar; Esc na contagem retorna à preparação sem segmentos; 3/2/1 observados por UI Automation sem novos segmentos em disco; pausa com estado textual Pausado e duração congelada; duas pausas/retomadas por botões e atalhos; salvar com mensagem Seu vídeo foi salvo!, presença de Abrir pasta e fechamento por Concluir. MP4 640×360, 15 fps, um vídeo, zero áudio, decodificação completa aprovada. |
+| Descarte pela UI | Na mesma execução Functional: cancelar a confirmação restaurou Pausado quando já estava pausado e Gravando quando estava gravando; confirmar descartou a segunda gravação, não gerou segundo MP4 e manteve os bytes do vídeo anterior intactos. A confirmação foi observada antes da ação destrutiva. |
+| Exclusão — controle positivo | PASS em `.test-artifacts/ux11-ui-feeb35826c204e889bfaedf6ebcaacf4/ExclusionControl`: barra real visível com --ux-test --disable-capture-exclusion aparece no gdigrab e no primeiro frame do MP4, validando o caminho da prova. |
+| Exclusão — comportamento normal | PASS em `.test-artifacts/ux11-ui-c064ee90ebad4430bc4e8550121f56b3/Exclusion`: mesmo retângulo da barra real visível contém o fundo magenta no gdigrab e no primeiro frame do MP4 com WDA padrão. A prova verifica pixels capturados, não apenas o retorno da API. Ambos os MP4s têm um vídeo, zero áudio, 15 fps e decode completo aprovado. |
+| Contagem fora do vídeo | Nos dois cenários de exclusão, 3/2/1 foram observados e nenhum segmento novo apareceu até a contagem terminar. A região central de 300×300 pixels do primeiro frame manteve o fundo magenta, sem o painel da contagem. A combinação de ordem em disco e amostragem não depende só de WDA. |
+| Arraste real e salvar pausado | PASS em `.test-artifacts/ux11-ui-4b8694a5c0354c32bbc55d18b249eb4d/Drag`: arraste pelo fundo da barra principal, texto da preparação e cronômetro moveu as janelas e as manteve dentro da área útil; clique no botão Pausar com movimento de 2 pixels executou a ação sem deslocar a janela. Salvar enquanto explicitamente pausado gerou MP4 válido sem áudio, 15 fps e decode completo aprovado. |
+| Core final | Release --live --faults PASS **68 asserções**, informado e executado pelo agente de captura em `.test-artifacts/qa-11065829dcf846d0ae925c047a63820c`. Inclui relógio baseado somente em progresso codificado do FFmpeg, descarte em gravação/pausa/falha, concorrência, isolamento de sessões e vídeos anteriores, links/reparse points reais, falhas de exclusão, leitura de propriedade inválida, falha de início e limites de encerramento do processo/leitores. |
+
+O primeiro ensaio Functional encontrou um problema do próprio teste: o ponteiro avançava antes de o Windows processar o mouse down, produzindo região menor; foi corrigido com espera explícita. Outro ensaio de pixels foi invalidado porque uma janela do terminal cobriu parte do fundo de teste; o fundo foi elevado antes do aplicativo de teste e as provas foram repetidas. Um ensaio de arraste usava o texto antigo da preparação; o localizador foi atualizado para o texto final. Esses ensaios permanecem nos artefatos como falhas do teste, não como aprovações nem como falhas atribuídas ao aplicativo.
+
+Comandos atuais:
+
+```
+powershell -File tests/UI-Flow.ps1 -Scenario All
+# ou execução focada: Functional, ExclusionControl, Exclusion, Drag
+```
+
+Pendências específicas: escalas 125%/150% e DPI misto, monitores com coordenadas negativas e desconexão durante fluxo, inspeção visual detalhada do anel animado e presença do cursor no MP4; amostragem do estado de botões durante finalização muito curta e abertura efetiva da pasta nesta nova UI. O botão Abrir pasta foi localizado, mas o roteiro usa Concluir para não abrir janelas extras. O smoke de quatro bordas é relatado separadamente pelo líder/agente desktop. WDA foi comprovado neste Windows; outros drivers e ambientes precisam repetir a prova, sem promessa universal de exclusão.
+
+Métricas de exclusão (fração de pixels magenta no retângulo interno da barra): controle positivo gdigrab=0, primeiro frame=0; padrão WDA gdigrab=1, primeiro frame=1. Região central de contagem: controle=0.99835555555555555, padrão=0.99835555555555555.
+
+## Retomada pendente: tooltips capturados
+A inspeção visual pelo líder encontrou um popup branco de tooltip ainda capturado em `ux11-ui-c064ee90ebad4430bc4e8550121f56b3/Exclusion/actualbar-gdigrab.png`. A prova anterior aprovou o CORPO da barra, não todas as janelas auxiliares. O popup fica fora do retângulo inicialmente amostrado. Exclusão completa dos controles permanece pendente.
+Próximo teste: hover no fundo/estado, Pausar e cronômetro, obter HWND/BoundingRectangle do ToolTip via UIAutomation, comparar pixels com fundo magenta e controle positivo, inclusive no MP4. Correção do ToolTip explícito/WDA do popup ainda não foi implementada. O agente QA recebeu limite de uso antes de concluir o cenário. Ver o ponto exato no ROADMAP.md.

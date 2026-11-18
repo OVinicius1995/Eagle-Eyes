@@ -40,4 +40,4 @@ powershell -File scripts/Publish-Release.ps1
 
 `Iniciar.cmd` abre a publicação local em `artifacts/eagle-eyes` ou compila/executa o projeto. O `global.json` fixa SDK 11.0.100 sem preview.
 
-O primeiro marco foi validado automaticamente com duas pausas, sem áudio e decodificação completa. O usuário informou ter concluído seus testes e autorizou o release 1. Cenários específicos de múltiplos monitores e escalas continuam sem evidência individual documentada. Consulte [QA](docs/QA.md), [ROADMAP](ROADMAP.md), [AGENTS](AGENTS.md) e [notas da versão](docs/releases/v1.0.0.md).
+O primeiro marco foi validado automaticamente com duas pausas, sem áudio e decodificação completa. A UX 1.1 tem build e provas funcionais; o checkpoint no ROADMAP descreve a validação atual. Não publicar a UX 1.1 sem nova autorização. O usuário informou ter concluído seus testes e autorizou o release 1. Cenários específicos de múltiplos monitores e escalas continuam sem evidência individual documentada. Consulte [QA](docs/QA.md), [ROADMAP](ROADMAP.md), [AGENTS](AGENTS.md) e [notas da versão](docs/releases/v1.0.0.md).

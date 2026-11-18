@@ -42,12 +42,14 @@ if (args.Contains("--live"))
     Assert(session.State == RecordingState.Recording, "Live capture started");
     await Reject(() => session.StartAsync(new CaptureArea(0, 0, 640, 360), artifacts), "Reject duplicate recording");
     await Task.Delay(1800);
+    Assert(session.RecordedDuration > TimeSpan.Zero, "Duration advances from encoded FFmpeg progress");
     await session.PauseAsync();
     var pausedDuration = session.RecordedDuration;
     await Task.Delay(1500);
     Assert(Math.Abs((session.RecordedDuration - pausedDuration).TotalSeconds) < .1, "Duration frozen during first pause");
     await session.ResumeAsync();
     await Task.Delay(1800);
+    Assert(session.RecordedDuration > TimeSpan.Zero, "Duration advances from encoded FFmpeg progress");
     await session.PauseAsync();
     pausedDuration = session.RecordedDuration;
     await Task.Delay(1500);
@@ -141,6 +143,9 @@ if (args.Contains("--live"))
     File.WriteAllText(markerPath, "{\"OwnershipId\":\"different-session\"}");
     discardResult = await discarded.DiscardAsync();
     Assert(!discardResult.Complete && Directory.GetFiles(tamperedDirectory, "segment-*.mp4").Any(), "Ownership mismatch preserves all session contents");
+    File.WriteAllText(markerPath, "{\"OwnershipId\":123}");
+    discardResult = await discarded.DiscardAsync();
+    Assert(!discardResult.Complete && discarded.State == RecordingState.Faulted, "Invalid ownership token type yields partial result without throwing");
     File.WriteAllBytes(markerPath, markerBytes);
     Assert((await discarded.DiscardAsync()).Complete, "Restored ownership permits discard retry");
 
@@ -201,12 +206,21 @@ if (args.Contains("--live"))
 }
 if (args.Contains("--faults"))
 {
+    using (var failedStart = new RecordingSession(ffmpeg, ffprobe))
+    {
+        await Reject(() => failedStart.StartAsync(new CaptureArea(int.MaxValue - 1000, int.MaxValue - 1000, 320, 240), artifacts), "Out-of-desktop gdigrab startup is rejected");
+        Assert(failedStart.State == RecordingState.Faulted, "Failed FFmpeg startup exposes Faulted state");
+        Assert((await failedStart.DiscardAsync()).Complete, "Discard joins readers after failed startup without requiring valid video");
+    }
     var harnessExecutable = Path.Combine(AppContext.BaseDirectory, "EagleEyes.Tests.exe");
     using (var unresponsive = new RecordingSession(harnessExecutable, ffprobe))
     {
         var shutdownWall = Stopwatch.StartNew();
         await unresponsive.StartAsync(new CaptureArea(0, 0, 320, 240), artifacts);
         var unresponsiveDirectory = unresponsive.RecoveryDirectory!;
+        Assert(unresponsive.RecordedDuration == TimeSpan.Zero, "Clock stays zero before any encoded progress despite process startup delay");
+        await Task.Delay(300);
+        Assert(unresponsive.RecordedDuration == TimeSpan.Zero, "Clock never counts wall time without encoded video progress");
         var forcedDiscard = await unresponsive.DiscardAsync();
         Assert(forcedDiscard.Complete && unresponsive.State == RecordingState.Idle && !Directory.Exists(unresponsiveDirectory), "Discard kills and awaits unresponsive fake capture without validating nonexistent video");
         Assert(shutdownWall.Elapsed.TotalSeconds >= 5 && shutdownWall.Elapsed.TotalSeconds < 20, "Unresponsive capture uses bounded graceful timeout then forced shutdown");

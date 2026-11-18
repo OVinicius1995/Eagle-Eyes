@@ -1,6 +1,10 @@
 ﻿param([ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version='1.0.0')
 $ErrorActionPreference='Stop'
 $repoRoot=Split-Path $PSScriptRoot -Parent
+[xml]$appProject=[IO.File]::ReadAllText((Join-Path $repoRoot 'src\EagleEyes.App\EagleEyes.App.csproj'))
+$appVersion=[string]$appProject.Project.PropertyGroup.Version
+if($Version-ne $appVersion){throw "A versão solicitada ($Version) difere do aplicativo ($appVersion). Informe -Version corretamente e prepare as notas antes de empacotar."}
+if(!(Test-Path -LiteralPath (Join-Path $repoRoot "docs\releases\v$Version.md"))){throw 'Prepare as notas da versão antes de empacotar.'}
 $releaseRoot=Join-Path $repoRoot "artifacts\releases\v$Version"
 $staging=Join-Path $releaseRoot ('package-'+[Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $staging | Out-Null
