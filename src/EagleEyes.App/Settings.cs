@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 namespace EagleEyes.App;
 
@@ -11,6 +11,7 @@ internal sealed class Settings
     public bool Expanded { get; set; } = true;
     public bool KeepExpanded { get; set; } = true;
     public bool FullMonitor { get; set; }
+    public bool CheckForUpdates { get; set; } = true;
     public bool HideDuringCapture { get; set; } = true;
     public int Countdown { get; set; } = 3;
     static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EagleEyes", "settings.json");

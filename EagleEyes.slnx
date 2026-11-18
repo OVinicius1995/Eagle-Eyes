@@ -5,4 +5,5 @@
   <Project Path="tests/EagleEyes.AffinityProof/EagleEyes.AffinityProof.csproj" />
   <Project Path="tests/EagleEyes.BrandTests/EagleEyes.BrandTests.csproj" />
   <Project Path="tests/EagleEyes.DesignTests/EagleEyes.DesignTests.csproj" />
+  <Project Path="tests/EagleEyes.UpdateTests/EagleEyes.UpdateTests.csproj" />
 </Solution>

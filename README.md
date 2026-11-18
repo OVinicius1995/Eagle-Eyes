@@ -56,3 +56,7 @@ powershell -File tests/UI-MissingComponents.ps1
 ```
 
 Os testes de UI exigem aplicativo fechado e restauram preferências quando as alteram. Nenhum instalador/gerador de atalhos faz parte do projeto nesta versão.
+
+## Instalador e aviso de versões
+
+Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador local inclui o runtime .NET, cria atalhos e preserva dados. FFmpeg continua externo e precisa estar na pasta `ffmpeg` ao lado do aplicativo. Configurações permite verificar novas releases estáveis e receber avisos; a aplicação da atualização é feita pelo usuário com o instalador. Esta versão ainda não foi publicada.

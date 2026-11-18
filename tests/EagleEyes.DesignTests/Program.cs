@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Windows;
@@ -52,6 +52,11 @@ internal static class Program
             Assert(settings.Resources.Source!.OriginalString.EndsWith("Design/EagleEyes.Theme.xaml"), "Settings uses shared theme resource");
             Assert(ColorOf(settingsSave.Background) == Color.FromRgb(43, 124, 83), "Settings primary keeps approved green");
             SavePreview(settings, Path.Combine(artifacts, "settings.png"));
+            var updateToggle = Descendants<CheckBox>(settingsContent).Single(b => System.Windows.Automation.AutomationProperties.GetAutomationId(b) == "CheckForUpdates");
+            Assert(updateToggle.IsChecked == true, "Automatic update notice defaults enabled");
+            Assert(Descendants<Button>(settingsContent).Any(b => b.Content as string == "Verificar atualizações" && b.IsEnabled), "Manual update check available");
+            Descendants<ScrollViewer>(settingsContent).First().ScrollToBottom(); settingsContent.UpdateLayout();
+            SavePreview(settings, Path.Combine(artifacts, "settings-updates.png"));
 
             owner = new Window { Width = 1, Height = 1, Left = 10, Top = 10, WindowStyle = WindowStyle.None, ShowInTaskbar = false, ShowActivated = false };
             owner.Show(); owner.Hide();
@@ -93,6 +98,28 @@ internal static class Program
             };
             timer.Start();
             saved.Invoke(null, [owner, Path.Combine(artifacts, "Evidencia-de-teste.mp4")]);
+            if (failure != null) throw failure;
+            var releaseType = assembly.GetType("EagleEyes.App.UpdateRelease", true)!;
+            var release = Activator.CreateInstance(releaseType, [new Version(1, 3, 0), new Uri("https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.3.0")]);
+            var notice = assembly.GetType("EagleEyes.App.UserMessages", true)!.GetMethod("UpdateAvailable", BindingFlags.NonPublic | BindingFlags.Static)!;
+            var noticeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+            noticeTimer.Tick += (_, _) =>
+            {
+                noticeTimer.Stop(); Window? dialog = null;
+                try
+                {
+                    dialog = app.Windows.Cast<Window>().Single(w => w.Title == "Nova versão disponível" && w.IsVisible);
+                    var later = Descendants<Button>((DependencyObject)dialog.Content).Single(b => b.Content as string == "Agora não");
+                    var open = Descendants<Button>((DependencyObject)dialog.Content).Single(b => b.Content as string == "Abrir versão");
+                    Assert(later.IsCancel, "Update notice supports dismissal");
+                    Assert(ReferenceEquals(open.Style, dialog.Resources["EagleEyes.Button.Primary"]), "Update action follows shared identity");
+                    SavePreview(dialog, Path.Combine(artifacts, "update-notice.png"));
+                    later.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert(!dialog.IsVisible, "Dismiss update closes dialog without browser or installation");
+                }
+                catch (Exception error) { failure = error; dialog?.Close(); }
+            };
+            noticeTimer.Start(); notice.Invoke(null, [owner, release]);
             if (failure != null) throw failure;
             Assert(checks.Count >= 19, "Dialog rendering checks completed");
             var guidePath = Path.Combine(root, "docs", "IDENTIDADE-VISUAL.md");

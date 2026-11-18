@@ -11,3 +11,8 @@ A identidade e os ícones vetoriais Eagle Eyes são implementados no projeto, se
 SHA256 dos executáveis locais inspecionados em 17/11/2026:
 - ffmpeg.exe: D0DDD82AA9247BEEFCF31788E6EF9AA492E2BF1FB9CA06E67E487CD59F8F1EB1
 - ffprobe.exe: 0038F578F03161F23F6016142E2CD31BA30A290FA9B6BD1B7DEF3D06DA47EACE
+
+## Ferramenta de instalação
+
+Inno Setup 6.7.4, origem oficial https://github.com/jrsoftware/issrc/releases/tag/is-6_7_4 (JRSoftware/Pyrsys B.V.). Compilador é ferramenta de desenvolvimento, mantido somente em artifacts/tools ignorado pelo Git. Licença/termos do Inno Setup em https://jrsoftware.org/isinfo.php e no arquivo de licença da instalação; o motor de setup gerado acompanha o instalador conforme esses termos. Não é biblioteca incorporada ao aplicativo.
+O pacote self-contained inclui o runtime Microsoft .NET Windows Desktop e preserva seus arquivos LICENSE/ThirdPartyNotices. Nenhum novo pacote NuGet de terceiros foi adicionado. FFmpeg continua fora do instalador até confirmar proveniência e distribuição correspondente.

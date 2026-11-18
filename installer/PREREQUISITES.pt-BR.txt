@@ -1,0 +1,8 @@
+﻿Eagle Eyes — antes de instalar
+
+Este instalador inclui o runtime .NET, mas não inclui FFmpeg.
+Para gravar, crie a pasta ffmpeg dentro da pasta de instalação e coloque nela ffmpeg.exe e ffprobe.exe, obtidos de uma distribuição confiável e licenciada.
+
+Salve sua gravação e SAIA do Eagle Eyes antes de instalar uma atualização. O instalador não encerra o aplicativo automaticamente.
+
+Seus vídeos, preferências e arquivos adicionados manualmente não são apagados pela desinstalação. Instale em uma pasta própria, sem misturar com cópias portáteis.

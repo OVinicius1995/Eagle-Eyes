@@ -7,6 +7,8 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Build falhou.'}
     dotnet run --project tests/EagleEyes.Tests -c Release --no-build
     if($LASTEXITCODE -ne 0){throw 'Testes falharam.'}
+    dotnet run --project tests/EagleEyes.UpdateTests -c Release --no-build
+    if($LASTEXITCODE -ne 0){throw 'Testes de atualização falharam.'}
     if($Live){
         dotnet run --project tests/EagleEyes.Tests -c Release --no-build -- --live
         if($LASTEXITCODE -ne 0){throw 'Prova real falhou.'}
