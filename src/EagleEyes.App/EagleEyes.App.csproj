@@ -1,1 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>WinExe</OutputType><Version>1.1.0</Version><AssemblyVersion>1.1.0.0</AssemblyVersion><FileVersion>1.1.0.0</FileVersion><Product>Eagle Eyes</Product><TargetFramework>net11.0-windows</TargetFramework><UseWPF>true</UseWPF><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><ApplicationManifest>app.manifest</ApplicationManifest></PropertyGroup><ItemGroup><ProjectReference Include="../EagleEyes.Core/EagleEyes.Core.csproj" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Product>Eagle Eyes</Product>
+    <TargetFramework>net11.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>../../Assets/eagle-eyes.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../EagleEyes.Core/EagleEyes.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="../../Assets/eagle-eyes.ico" Link="Assets/eagle-eyes.ico" />
+    <Resource Include="../../Assets/eagle-eyes.png" Link="Assets/eagle-eyes.png" />
+    <Content Include="../../Assets/eagle-eyes.ico" Link="Assets/eagle-eyes.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

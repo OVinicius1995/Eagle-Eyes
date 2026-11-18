@@ -84,3 +84,23 @@ A exclusão dos controles foi comprovada neste Windows/FFmpeg; não constitui ga
 
 ### Continuidade e limite de uso
 O saldo total não é visível ao líder. Manter etapas concluídas, testes, pendências e próximo passo neste arquivo e salvar commits locais frequentes. Se agente/ferramenta informar limite ou o usuário pedir pausa, salvar checkpoint e encerrar. O usuário restaurou o limite para concluir esta etapa; a interrupção anterior não perdeu alterações.
+
+## Marca oficial, ícones e configurações - checkpoint atual
+Estado: retomado após pausa do usuário; alterações preservadas. Agente QA indisponível por limite anterior; líder assume a conclusão sequencial. Nenhum push ou novo release autorizado.
+- [x] Fonte aprovada preservada; cópia canônica com SHA256 idêntico.
+- [x] Conversão local sem redesenho/recoloração: PNG1024 transparente com olhos vazados e largura85%; ICO verdadeiro32bits com16/20/24/32/48/64/128/256.
+- [x] Engrenagem preenchida compacta de oito dentes/furo, X14DIP e família vetorial coesa; CaptureSafeToolTip preservado.
+- [x] Configurações escuras, Salvar/Cancelar, sem campo FFmpeg; par de executáveis nas pastas padrão, sem PATH/CWD/configuração antiga.
+- [x] Marca no EXE, todas as janelas e bandeja nativa com Mostrar controles/Sair protegido.
+- [x] Corrigido corte vertical do campo de saída no template; preview novo legível, build Debug integrado passou sem avisos/erros.
+- [x] Testes independentes de marca/caminhos/vetores/HICON: 88 aprovados em `.test-artifacts/branding-8f6252ac81c94105b2161e12a17f639d/result.json` (Failure null). Fonte mediana RGB93/118/123, saída opaca93/117/122; sem recoloração, diferença de reamostragem.
+- [x] UIA anterior em `.test-artifacts/brand-ui-ace634ac70f742e79e82df6ad892ce58`: campos, Salvar/Cancelar e preferências, HICON small/big de Main/Settings, Shell registrou bandeja; callbacks Mostrar/Sair, cancelar saída restaurou gravação, descarte confirmado saiu sem MP4. Teste de callback nativo via PostMessage, não clique físico no ícone da bandeja.
+- [ ] Repetir teste focado de configurações após ajuste visual do TextBox e verificar alerta de componentes ausentes em execução isolada.
+- [ ] Build Release e atualização do executável de entrega, conferindo ICO copiado e HICON do EXE publicado.
+- [ ] Consolidar docs/QA/README e commit final.
+
+### Próximo passo exato
+Código e testes estão consistentes: build Debug da solução com cinco projetos passou. Os 88 testes de marca já foram executados e salvos; não refazer conversão da imagem. Rodar `tests/UI-Branding.ps1 -RequireBrandingReport` para edição/Salvar/Cancelar após a correção visual (sem repetir TrayGuard completo já aprovado). Para alerta de FFmpeg ausente, usar cópia do aplicativo em pasta temporária fora dos ancestrais do repositório, sem ffmpeg, e tentar Gravar; jamais renomear componentes de uma sessão do usuário.
+Depois executar Build.ps1 para Release/local e testes de marca com --exe no EXE publicado. Atualizar pendências e salvar commit final, sem push/release. Preview correto em `.test-artifacts/ui-brand-preview/settings-preview.png`. Documentação de proveniência/transformação em docs/BRANDING.md.
+
+Preservar todos os recursos de captura UX1.1; Core não foi alterado nesta etapa. Permanecem testes manuais de escalas125%/150%, múltiplos monitores, ícone em atalhos externos criados pelo usuário e posição da bandeja/overflow controlada pelo Windows.

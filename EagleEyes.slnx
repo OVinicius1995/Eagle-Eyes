@@ -3,4 +3,5 @@
   <Project Path="src/EagleEyes.App/EagleEyes.App.csproj" />
   <Project Path="tests/EagleEyes.Tests/EagleEyes.Tests.csproj" />
   <Project Path="tests/EagleEyes.AffinityProof/EagleEyes.AffinityProof.csproj" />
+  <Project Path="tests/EagleEyes.BrandTests/EagleEyes.BrandTests.csproj" />
 </Solution>

@@ -64,6 +64,31 @@ internal sealed class MainWindow : Window
         WindowDragBehavior.Attach(this, SnapAfterDrag);
         MouseEnter += (_, _) => collapseTimer.Stop(); MouseLeave += (_, _) => { if (!settings.KeepExpanded) collapseTimer.Start(); };
     }
+    internal void ShowControls()
+    {
+        // Selection and countdown own the current interaction; do not restore an idle bar over them.
+        if (busy) return;
+        var dialog = OwnedWindows.Cast<Window>().LastOrDefault(window => window.IsVisible);
+        if (dialog != null) { dialog.Activate(); return; }
+        Show();
+        if (session == null) { settings.Expanded = true; Render(); }
+        else Native.ClampToWorkArea(this);
+        Activate();
+    }
+
+    internal async Task ExitFromTrayAsync()
+    {
+        if (busy) return;
+        if (Active)
+        {
+            await Discard();
+            if (session != null) return;
+        }
+        if (busy || session != null) return;
+        closing = true;
+        Close();
+    }
+
     IntPtr Hook(IntPtr h, int msg, IntPtr w, IntPtr l, ref bool handled)
     {
         if (msg == 0x312) { handled = true; if (w.ToInt32() == 1) _ = PauseResume(); else if (w.ToInt32() == 2) _ = Stop(); }
@@ -73,13 +98,14 @@ internal sealed class MainWindow : Window
     }
     ToolTip CaptureToolTip(string text) => CaptureSafeToolTip.Create(text, !(Testing && args.Contains("--disable-capture-exclusion")));
 
-    Button IconButton(string tip, string geometry, Action action, double size = 32)
+    Button IconButton(string tip, FunctionalIcon icon, Action action, double size = 32)
     {
         var button = new Button { Width = size, Height = size, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = ink, Cursor = Cursors.Hand, ToolTip = CaptureToolTip(tip), Padding = new Thickness(6), Focusable = true };
         var border = new FrameworkElementFactory(typeof(Border)); border.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent }); border.SetValue(Border.CornerRadiusProperty, new CornerRadius(5)); var presenter = new FrameworkElementFactory(typeof(ContentPresenter)); presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center); presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center); border.AppendChild(presenter); var template = new ControlTemplate(typeof(Button)) { VisualTree = border };
         var hover = new Trigger { Property = IsMouseOverProperty, Value = true }; hover.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(45, 183, 185, 205)))); template.Triggers.Add(hover);
         var focus = new Trigger { Property = IsKeyboardFocusedProperty, Value = true }; focus.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(65, 183, 185, 205)))); template.Triggers.Add(focus); button.Template = template;
-        button.Content = new Viewbox { Width = size - 12, Height = size - 12, Child = new Path { Data = Geometry.Parse(geometry), Stroke = ink, StrokeThickness = 1.8, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round, Stretch = Stretch.Uniform } };
+        double visualSize = icon == FunctionalIcon.Settings || (icon == FunctionalIcon.Close && size <= 28) ? 14 : icon == FunctionalIcon.Video ? 22 : icon == FunctionalIcon.ChevronRight ? 18 : 20;
+        button.Content = FunctionalIcons.Create(icon, visualSize);
         AutomationProperties.SetName(button, tip); button.Click += (_, _) => action(); return button;
     }
     void Render()
@@ -98,18 +124,18 @@ internal sealed class MainWindow : Window
             silhouette = raw;
         }
         canvas.Clip = silhouette; canvas.Children.Add(new Path { Data = silhouette, Fill = dark });
-        var arrow = IconButton(expanded ? "Recolher barra" : "Expandir barra", "M2,1 L10,9 L2,17", () => _ = ToggleExpanded(), 34);
+        var arrow = IconButton(expanded ? "Recolher barra" : "Expandir barra", FunctionalIcon.ChevronRight, () => _ = ToggleExpanded(), 34);
         arrow.RenderTransformOrigin = new Point(.5, .5); double angle = settings.Edge switch { "Left" => 180, "Top" => -90, "Bottom" => 90, _ => 0 }; if (!expanded) angle += 180; arrow.RenderTransform = new RotateTransform(angle);
         Canvas.SetLeft(arrow, Vertical ? (expanded ? (settings.Edge == "Right" ? 2 : 64) : 2) : (width - 34) / 2); Canvas.SetTop(arrow, Vertical ? (height - 34) / 2 : (expanded ? (settings.Edge == "Top" ? 64 : 2) : 2)); canvas.Children.Add(arrow);
         if (!expanded) { duration = null; Dock(); return; }
         var body = new StackPanel { Orientation = Vertical ? Orientation.Vertical : Orientation.Horizontal, Width = Vertical ? 62 : length, Height = Vertical ? length : 62, VerticalAlignment = VerticalAlignment.Center };
         Canvas.SetLeft(body, settings.Edge == "Right" ? 38 : 0); Canvas.SetTop(body, settings.Edge == "Bottom" ? 38 : 0); canvas.Children.Add(body);
         var top = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3) };
-        top.Children.Add(IconButton("Configurações", "M8,1 L12,1 L13,4 L16,6 L19,6 L21,10 L19,13 L19,16 L16,19 L13,19 L10,21 L6,19 L6,16 L3,13 L1,10 L3,6 L6,6 Z M14,10 A4,4 0 1 1 6,10 A4,4 0 1 1 14,10", Configure, 28));
-        top.Children.Add(IconButton("Fechar Eagle Eyes", "M2,2 L18,18 M18,2 L2,18", Close, 28)); body.Children.Add(top);
+        top.Children.Add(IconButton("Configurações", FunctionalIcon.Settings, Configure, 28));
+        top.Children.Add(IconButton("Fechar Eagle Eyes", FunctionalIcon.Close, Close, 28)); body.Children.Add(top);
         var drag = new Border { Width = Vertical ? 54 : 12, Height = Vertical ? 12 : 54, Background = Brushes.Transparent, Cursor = Cursors.SizeAll, ToolTip = CaptureToolTip("Arraste para mover e encaixar na borda"), Child = new Path { Data = Geometry.Parse(Vertical ? "M17,3 L35,3 M17,7 L35,7" : "M3,17 L3,35 M7,17 L7,35"), Stroke = ink, StrokeThickness = 1 } };
         body.Children.Add(drag);
-        duration = null; body.Children.Add(IconButton("Gravar vídeo", "M2,4 L14,4 L14,16 L2,16 Z M14,8 L21,4 L21,16 L14,12", () => _ = Start(), 42));
+        duration = null; body.Children.Add(IconButton("Gravar vídeo", FunctionalIcon.Video, () => _ = Start(), 42));
         Dock();
     }
     void Dock()
@@ -224,12 +250,12 @@ internal sealed class MainWindow : Window
         AutomationProperties.SetAutomationId(duration, "RecordingDuration"); row.Children.Add(duration);
         void Separator() => row.Children.Add(new Border { Width = 1, Height = 24, Background = new SolidColorBrush(Color.FromRgb(66, 67, 85)), Margin = new Thickness(7, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
         Separator();
-        var pause = IconButton(paused ? "Retomar gravação" : "Pausar gravação", paused ? "M4,2 L18,10 L4,18 Z" : "M5,2 L5,18 M15,2 L15,18", () => _ = PauseResume(), 36);
+        var pause = IconButton(paused ? "Retomar gravação" : "Pausar gravação", paused ? FunctionalIcon.Play : FunctionalIcon.Pause, () => _ = PauseResume(), 36);
         pause.IsEnabled = !busy; row.Children.Add(pause);
-        var save = IconButton("Parar e salvar", "M3,3 L17,3 L17,17 L3,17 Z", () => _ = Stop(), 36);
+        var save = IconButton("Parar e salvar", FunctionalIcon.Stop, () => _ = Stop(), 36);
         save.IsEnabled = !busy; row.Children.Add(save);
         Separator();
-        var discard = IconButton("Descartar gravação", "M2,2 L18,18 M18,2 L2,18", () => _ = Discard(), 36);
+        var discard = IconButton("Descartar gravação", FunctionalIcon.Close, () => _ = Discard(), 36);
         discard.IsEnabled = !busy; row.Children.Add(discard);
         ToolTip = CaptureToolTip(paused ? "Gravação pausada. Continue quando estiver pronto." : "Ctrl+Shift+P: pausar/retomar · Ctrl+Shift+F: parar e salvar");
         if (!sessionPositioned) PlaceRecordingBar();
@@ -320,7 +346,7 @@ internal sealed class MainWindow : Window
         bool preserved = false;
         try { preserved = recovery != null && Directory.Exists(recovery) && Directory.EnumerateFiles(recovery, "*.mp4").Any(p => new FileInfo(p).Length > 0); } catch { }
         string message = operation == "start"
-            ? error is UnauthorizedAccessException or DirectoryNotFoundException ? "Não conseguimos salvar nesta pasta. Escolha outra pasta para continuar." : "Não foi possível iniciar a gravação. Confira as configurações e tente novamente."
+            ? error is FileNotFoundException ? error.Message : error is UnauthorizedAccessException or DirectoryNotFoundException ? "Não conseguimos salvar nesta pasta. Escolha outra pasta para continuar." : "Não foi possível iniciar a gravação. Confira as configurações e tente novamente."
             : operation == "save" && preserved ? "Não foi possível concluir o vídeo. Os trechos gravados foram preservados para recuperação."
             : operation == "discard" ? "Não foi possível descartar todos os arquivos. Confira a pasta de saída antes de tentar novamente."
             : "A gravação foi interrompida. Confira os detalhes e tente novamente.";
@@ -353,3 +379,4 @@ internal sealed class MainWindow : Window
         catch (Exception ex) { File.WriteAllText(ArgumentValue("--report") ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "eagle-eyes-ui-proof.txt"), ex.ToString()); closing = true; Close(); }
     }
 }
+

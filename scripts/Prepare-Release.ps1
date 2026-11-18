@@ -11,6 +11,9 @@ New-Item -ItemType Directory -Force $staging | Out-Null
 $published=Join-Path $releaseRoot ('build-'+[Guid]::NewGuid().ToString('N'))
 & (Join-Path $PSScriptRoot 'Build.ps1') -OutputDirectory $published
 Get-ChildItem -LiteralPath $published -File | Where-Object Extension -NE '.pdb' | Copy-Item -Destination $staging
+# The native tray loads the official multi-size ICO from Assets; keep it in distributable packages.
+$publishedAssets=Join-Path $published 'Assets'
+if(Test-Path -LiteralPath $publishedAssets){Copy-Item -LiteralPath $publishedAssets -Destination (Join-Path $staging 'Assets') -Recurse}
 New-Item -ItemType Directory -Force (Join-Path $staging 'docs') | Out-Null
 Copy-Item -LiteralPath (Join-Path $repoRoot 'docs\DEPENDENCIES.md') -Destination (Join-Path $staging 'docs')
 Copy-Item -LiteralPath (Join-Path $repoRoot "docs\releases\v$Version.md") -Destination (Join-Path $staging 'NOTAS-DA-VERSAO.md')
@@ -47,8 +50,8 @@ $hash=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $archive=[IO.Compression.ZipFile]::OpenRead($zip)
 try {
-    $entries=@($archive.Entries | ForEach-Object FullName)
-    foreach($required in @('EagleEyes.App.exe','EagleEyes.App.dll','EagleEyes.Core.dll','EagleEyes.App.runtimeconfig.json','LEIA-ME.txt')){
+    $entries=@($archive.Entries | ForEach-Object { $_.FullName.Replace('\','/') })
+    foreach($required in @('EagleEyes.App.exe','EagleEyes.App.dll','EagleEyes.Core.dll','EagleEyes.App.runtimeconfig.json','LEIA-ME.txt','Assets/eagle-eyes.ico')){
         if($entries -notcontains $required){throw "Pacote incompleto: $required"}
     }
     if($entries | Where-Object {$_ -match '(?i)(ffmpeg\.exe|ffprobe\.exe|\.mp4$|\.pdb$)'}){throw 'Conteúdo externo/temporário inesperado no pacote.'}
