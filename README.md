@@ -1,6 +1,6 @@
 ﻿# Eagle Eyes
 
-Gravador de tela Windows para evidências de testes de software. Release público estável: **1.0.0**. Esta branch contém as melhorias **UX 1.1 em desenvolvimento**, em C#/.NET 11, WPF e FFmpeg externo; ainda sem nova publicação.
+Gravador de tela Windows para evidências de testes de software. Release público estável: **1.0.0**. Esta branch contém as melhorias **UX 1.1 implementadas e validadas localmente**, em C#/.NET 11, WPF e FFmpeg externo; ainda sem nova publicação.
 
 ## Instalar e abrir
 Baixe o ZIP Windows x64 na [página de releases](https://github.com/OVinicius1995/Eagle-Eyes/releases), extraia a pasta inteira e execute `EagleEyes.App.exe`.
@@ -11,7 +11,7 @@ Dependências:
 
 Ao executar pelo repositório, o app também encontra `components/ffmpeg-master-latest-win64-gpl/bin`. Veja [dependências e proveniência](docs/DEPENDENCIES.md).
 
-## Gravar nesta versão em desenvolvimento
+## Gravar nesta versão local
 A engrenagem escolhe pasta de saída, monitor, modo e FFmpeg. O botão de vídeo abre a seleção: arraste uma região ou pressione Espaço para usar somente o monitor sob o ponteiro. Esc cancela e retorna à barra principal. A seleção não inicia captura.
 
 A barra de preparação permanece visível junto da área destacada. Use Gravar, Selecionar novamente ou Cancelar. Ao iniciar, a contagem central 3, 2, 1 aparece no monitor escolhido; Esc cancela a contagem e volta à área preparada. O painel e o destaque são fechados antes de iniciar FFmpeg.

@@ -13,7 +13,7 @@ Antes de delegar, definir contratos e propriedade de arquivos. Integração: rai
 
 ## Robustez
 Preservar temporários após falhas e nunca apagá-los antes de validar a saída. Nesta versão permanecem inclusive após sucesso: limpeza manual após conferir o MP4. Não prometer recuperar quadros ausentes. Rejeitar comandos inválidos, simultâneos e início duplicado. Considerar DPI misto e coordenadas negativas; registrar os cenários realmente testados.
-A barra é ocultada por padrão durante captura. Confirmar registro dos atalhos antes de ocultar e fechar o trecho antes de reaparecer. O retorno da API WDA não garante exclusão universal. Durante captura o relógio é uma estimativa ativa, ajustada pela duração dos arquivos na pausa/finalização.
+Na release 1.0 a barra era ocultada durante captura. Na UX 1.1 a barra permanece visível e tenta WDA; tooltips têm HWND próprio e usam CaptureSafeToolTip para excluir o popup antes de pintar. Testar pixels/MP4, pois retorno da API não garante exclusão universal. O relógio usa progresso codificado FFmpeg e duração FFprobe dos trechos fechados.
 
 ## Verificação e Git
 Inspecionar arquivos e estado local/remoto antes de alterações. Não reescrever histórico nem fazer force push. Não versionar FFmpeg, vídeos, temporários ou builds. Atualizar ROADMAP e documentação em cada marco, sem marcar cenários específicos como testados apenas por aprovação geral.
@@ -39,8 +39,14 @@ Arquivos exclusivos nesta etapa:
 - Agente QA: tests/UI-Flow.ps1, novos testes/UI/helpers sob tests exceto EagleEyes.Tests/Program.cs, docs/QA.md. Não alterar fontes de outros responsáveis; reportar correções ao dono.
 
 Checkpoint: atualizar ROADMAP em cada etapa com concluído, testes reais, pendências e próximo passo exato. Commits locais frequentes sem force push. Saldo de uso não é visível ao agente; ao pedido de pausa, salvar o estado e parar.
-## Checkpoint interrompido por limite de uso
+## Histórico: checkpoint f63e794 interrompido por limite de uso
 A UX1.1 está integrada localmente e tem regressão aprovada, mas ainda há tooltip WPF capturado fora da janela principal excluída por WDA. MainWindow.IconButton, duração e Window.ToolTip usam strings que geram popups separados. Corrigir e provar exclusão do popup antes de declarar entrega concluída. O próximo passo detalhado, evidências e o motivo da interrupção estão na seção final de ROADMAP.md. Usuário pediu checkpoint e interrupção quando o uso estiver próximo do limite; o agente QA informou limite explicitamente. Não presumir que o reset ocorreu apenas porque houve nova mensagem: conferir disponibilidade e continuar sequencialmente se necessário, preservando as responsabilidades já documentadas.
 
 ## Retomada após restauração do limite
 Usuário confirmou restauração e autorizou continuar. Líder implementou CaptureSafeToolTip.cs e integração de tooltips explícitos na MainWindow. QA mantém propriedade dos roteiros e docs/QA.md, executando provas focadas de popup real. Checkpoint anterior f63e794 preservado; consultar seção atual de ROADMAP antes de retomar. Nenhum novo release autorizado.
+
+## Estado atual da UX 1.1
+Escopo implementado e validado no ambiente disponível. A correção dos tooltips (f7738fe) passou em controle positivo e exclusão padrão de três popups reais, gdigrab e MP4. Core 68 asserções, fluxo funcional, arraste e cliques repetidos aprovados; evidências e pendências de hardware estão no ROADMAP/docs/QA. Executável local artifacts/eagle-eyes/EagleEyes.App.exe versão 1.1.0.0. Nenhum novo release autorizado. Não retomar o bug de tooltip como pendente: o histórico acima descreve o checkpoint antigo; consultar sempre o estado atual do ROADMAP.
+
+## Conclusão da prova dos tooltips
+Prova final robusta: controle positivo d0046dee2ea842528ee381066dbc3919 com três textos legíveis; WDA 32598b59835042ada901b83052bff127 com três popups ausentes do gdigrab/MP4. Ensaios antigos de MP4 em 8/13 s foram retirados por erro de sincronização do teste, substituídos por tempo da sessão/hover estabilizado e checagem de pixels brancos no controle. RepeatedActions b8e320c380b84543992cc9ae1cd7dab8 aprovou cliques duplicados em Gravar e salvar. Não há implementação pendente no escopo; ver ROADMAP para validações de ambiente e próximos pedidos.

@@ -113,3 +113,39 @@ Métricas de exclusão (fração de pixels magenta no retângulo interno da barr
 ## Retomada pendente: tooltips capturados
 A inspeção visual pelo líder encontrou um popup branco de tooltip ainda capturado em `ux11-ui-c064ee90ebad4430bc4e8550121f56b3/Exclusion/actualbar-gdigrab.png`. A prova anterior aprovou o CORPO da barra, não todas as janelas auxiliares. O popup fica fora do retângulo inicialmente amostrado. Exclusão completa dos controles permanece pendente.
 Próximo teste: hover no fundo/estado, Pausar e cronômetro, obter HWND/BoundingRectangle do ToolTip via UIAutomation, comparar pixels com fundo magenta e controle positivo, inclusive no MP4. Correção do ToolTip explícito/WDA do popup ainda não foi implementada. O agente QA recebeu limite de uso antes de concluir o cenário. Ver o ponto exato no ROADMAP.md.
+
+## Fechamento da regressão de tooltips — 17/11/2026
+
+A primeira prova de exclusão do corpo da barra não cobria os popups: o líder encontrou um tooltip branco vazando fora do retângulo amostrado. A correção usa WDA no HWND próprio de cada tooltip, com opacidade inicial zero até aplicar a afinidade e sem sombra independente. A validação abaixo substitui qualquer conclusão anterior de exclusão completa baseada somente no corpo da barra.
+
+Também foi identificada e corrigida uma fragilidade do teste: a duração efetivamente codificada exibida na UI pode atrasar o instante da captura por causa do buffering. Os quadros antigos dos cenários `ux11-ui-7dbc0f2e86174d51a8d878d2160dea8e` e `ux11-ui-cfb5c2e74ea84c19a27f02ef1011093c`, escolhidos pelo relógio da UI, **não são mais aceitos como prova de tooltip no MP4**: as amostras de Pausar e duração podiam atingir a barra/cursor antes de o popup aparecer. Isso não exigiu alterar o relógio do aplicativo, que deve continuar representando o vídeo efetivamente codificado.
+
+O roteiro focalizado agora espera o popup estabilizar, mede seu retângulo por UI Automation, inclui margem de dois pixels, usa o instante real em relação a `session.json/Started`, mantém o popup visível para a amostra e exige mais de 45% de pixels brancos no controle positivo. Assim, uma região escura da barra não produz falso positivo. Os três recortes MP4 positivos foram inspecionados e mostram os textos completos dos tooltips.
+
+| Tooltip real | Controle positivo: tempo / pixels brancos MP4 | WDA normal: tempo / fundo magenta MP4 |
+|---|---|---|
+| Fundo/estado: atalhos | 5,442 s / 66,92% | 7,367 s / 100% |
+| Pausar gravação | 10,544 s / 65,64% | 12,572 s / 95,64% |
+| Tempo efetivamente gravado | 15,771 s / 64,75% | 17,925 s / 99,23% |
+
+- Controle positivo aprovado: `.test-artifacts/ux11-ui-d0046dee2ea842528ee381066dbc3919/TooltipsControl`, executado com `--ux-test --disable-capture-exclusion`. Os três popups estavam visíveis via UI Automation e apareceram no gdigrab e nos quadros MP4; os recortes `tooltip-{background,pause,duration}-mp4-crop.png` mostram os textos legíveis.
+- Comportamento normal aprovado: `.test-artifacts/ux11-ui-32598b59835042ada901b83052bff127/Tooltips`. Os mesmos três tipos de popup estavam visíveis via UI Automation, mas seus retângulos ficaram com 100% de fundo magenta nas capturas gdigrab. Nos quadros MP4, a inspeção dos três recortes mostrou somente fundo magenta e, nas margens de Pausar/duração, a ponta do cursor gravado; nenhum texto, fundo ou borda do tooltip permaneceu. O cursor deve continuar sendo gravado.
+- Ambos os vídeos finais: um fluxo de vídeo, zero áudio, 15 fps, decodificação completa aprovada. `tooltip-exclusion.json` registra coordenadas, instantes, proporções de magenta/branco e origem do timestamp; `flow.log` registra o fluxo e a restauração das preferências. Nenhum processo de usuário precisou ser encerrado nesta retomada.
+
+Comandos para repetir somente as provas afetadas:
+
+```
+powershell -File tests/UI-Flow.ps1 -Scenario TooltipsControl
+powershell -File tests/UI-Flow.ps1 -Scenario Tooltips
+```
+
+### Comandos repetidos durante transições
+
+Cenário focalizado `RepeatedActions` aprovado em `.test-artifacts/ux11-ui-b8e320c380b84543992cc9ae1cd7dab8/RepeatedActions`:
+
+- Dois InvokePattern no botão Gravar: o segundo foi rejeitado por estar desabilitado; exatamente uma janela de contagem e uma sessão de gravação foram observadas.
+- Dois InvokePattern no botão Parar e salvar: os dois foram entregues à UI, e a proteção de estado resultou em exatamente um MP4 e uma sessão. O arquivo final passou por ffprobe e decodificação completa, com um vídeo, zero áudio e 15 fps.
+
+Esse cenário valida a interface durante início/finalização, além dos testes de concorrência do Core. O padrão `-Scenario All` inclui agora os cenários de tooltips e comandos repetidos. A retomada executou somente os cenários afetados; os resultados anteriores de Functional, Drag, Core e smoke permanecem documentados sem repetição desnecessária.
+
+Limites da conclusão: exclusão dos popups comprovada neste Windows, monitor único a 100%, para os tooltips reais de fundo/estado, Pausar e cronômetro. Não implica garantia universal para outros drivers, versões do Windows ou DPI misto. Continuam pendentes os cenários de hardware/escala listados anteriormente. Build e publicação do executável local são relatados pelo líder separadamente; nenhum release remoto novo foi publicado pelo QA.

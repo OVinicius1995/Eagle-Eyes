@@ -1,6 +1,6 @@
 ﻿param(
  [string]$Repository='C:\Users\ViniciusAbreudeOlive\source\repos\Eagle-Eyes',
- [ValidateSet('Functional','Exclusion','ExclusionControl','Drag','All')][string]$Scenario='All'
+ [ValidateSet('Functional','Exclusion','ExclusionControl','Drag','TooltipsControl','Tooltips','RepeatedActions','All')][string]$Scenario='All'
 )
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes,System.Drawing,System.Windows.Forms
@@ -73,8 +73,8 @@ function Observe-Countdown{
  $null=Wait-Element -name 'Pausar gravação' -kind Button
 }
 function Current-Text([string]$id){$element=Wait-Element -id $id;return $element.Current.Name}
-function Save-Recording{
- Invoke-Button 'Parar e salvar'
+function Save-Recording([bool]$alreadyRequested=$false){
+ if(!$alreadyRequested){Invoke-Button 'Parar e salvar'}
  $null=Wait-Element -name 'Seu vídeo foi salvo!'
  $null=Wait-Element -name 'Abrir pasta' -kind Button
  Invoke-Button 'Concluir'
@@ -107,6 +107,47 @@ function Capture-Screen([string]$path){
 function Magenta-Ratio([string]$path,[System.Drawing.Rectangle]$crop){
  $bitmap=[Drawing.Bitmap]::new($path);try{$count=0;$total=0;for($y=$crop.Top;$y-lt $crop.Bottom;$y+=2){for($x=$crop.Left;$x-lt $crop.Right;$x+=2){$pixel=$bitmap.GetPixel($x,$y);if($pixel.R-gt 220-and $pixel.G-lt 45-and $pixel.B-gt 220){$count++};$total++}};return $count/[double]$total}finally{$bitmap.Dispose()}
 }
+function Invoke-Twice($pattern,[string]$label){
+ $pattern.Invoke();Log ('First invoke '+$label)
+ try{$pattern.Invoke();Log ('Repeated invoke delivered '+$label+'; state must reject duplicate')}
+ catch [System.Windows.Automation.ElementNotAvailableException]{Log ('Repeated invoke rejected: element removed '+$label)}
+ catch [System.Windows.Automation.ElementNotEnabledException]{Log ('Repeated invoke rejected: element disabled '+$label)}
+ catch [InvalidOperationException]{Log ('Repeated invoke rejected: unavailable '+$label)}
+}
+function White-Ratio([string]$path,[System.Drawing.Rectangle]$crop){
+ $bitmap=[Drawing.Bitmap]::new($path);try{$count=0;$total=0;for($y=$crop.Top;$y-lt $crop.Bottom;$y+=2){for($x=$crop.Left;$x-lt $crop.Right;$x+=2){$pixel=$bitmap.GetPixel($x,$y);if($pixel.R-gt 210-and $pixel.G-gt 210-and $pixel.B-gt 210){$count++};$total++}};return $count/[double]$total}finally{$bitmap.Dispose()}
+}
+function Wait-VisibleTooltip{
+ $until=(Get-Date).AddSeconds(8)
+ do{
+  foreach($element in (Elements)){
+   if($element.Current.ControlType-eq [System.Windows.Automation.ControlType]::ToolTip-and !$element.Current.IsOffscreen){return $element}
+  }
+  Start-Sleep -Milliseconds 100
+ }while((Get-Date)-lt $until)
+ throw 'No visible UIAutomation ToolTip after hover'
+}
+
+function Sample-Tooltip([string]$label,$hoverTarget){
+ [EagleUiInput]::SetCursorPos(($monitor.Left+100),($monitor.Top+$monitor.Height-150))|Out-Null;Start-Sleep -Milliseconds 800
+ $target=$hoverTarget.Current.BoundingRectangle
+ [EagleUiInput]::SetCursorPos([int]($target.Left+$target.Width/2),[int]($target.Top+$target.Height/2))|Out-Null
+ $tooltip=Wait-VisibleTooltip;Start-Sleep -Milliseconds 350;$tooltip=Wait-VisibleTooltip;$rect=$tooltip.Current.BoundingRectangle
+ Assert ($rect.Width-gt 8-and $rect.Height-gt 8) ('Visible tooltip rectangle '+$label)
+ $crop=[Drawing.Rectangle]::new([int]($rect.Left-$monitor.Left-2),[int]($rect.Top-$monitor.Top-2),[int]($rect.Width+4),[int]($rect.Height+4))
+ $image=Join-Path $outputDirectory ('tooltip-'+$label+'-gdigrab.png');Capture-Screen $image
+ $ratio=Magenta-Ratio $image $crop
+ $liveWhite=White-Ratio $image $crop
+ $sessionFile=Get-ChildItem -LiteralPath $outputDirectory -Recurse -Filter session.json|Sort-Object LastWriteTimeUtc -Descending|Select-Object -First 1
+ $sessionData=Get-Content -Raw -LiteralPath $sessionFile.FullName|ConvertFrom-Json
+ $started=[DateTimeOffset]::Parse($sessionData.Started)
+ $sampleSecond=[Math]::Round(([DateTimeOffset]::Now-$started).TotalSeconds+0.5,3)
+ Start-Sleep -Milliseconds 2000
+ $tooltipAfter=Wait-VisibleTooltip
+ Assert (!$tooltipAfter.Current.IsOffscreen) ('Tooltip stayed visible for video sample '+$label)
+ Log ('Tooltip '+$label+' name='+$tooltip.Current.Name+' sampleSecond='+$sampleSecond+' liveMagenta='+$ratio)
+ return [pscustomobject]@{label=$label;tooltipName=$tooltip.Current.Name;crop=@{x=$crop.X;y=$crop.Y;width=$crop.Width;height=$crop.Height};sampleSecond=$sampleSecond;timestampSource='session Started and wall time plus0.5sec';liveMagentaRatio=$ratio;liveWhiteRatio=$liveWhite}
+}
 function Close-TestApp{
  if($app-and !$app.HasExited){Invoke-Button 'Fechar Eagle Eyes';if(!$app.WaitForExit(5000)){throw 'Test app did not close'}}
 }
@@ -118,11 +159,11 @@ try{
  $bounds=$monitor.Left.ToString()+','+$monitor.Top+','+$monitor.Width+','+$monitor.Height
  $background=Start-Process -FilePath $helper -ArgumentList @('--background','--bounds',$bounds,'--ready',$ready) -WindowStyle Hidden -PassThru
  $until=(Get-Date).AddSeconds(10);while(!(Test-Path -LiteralPath $ready)-and (Get-Date)-lt $until){Start-Sleep -Milliseconds 100};Assert (Test-Path -LiteralPath $ready) 'Magenta background ready'
- $scenarios=if($Scenario-eq 'All'){@('Functional','ExclusionControl','Exclusion','Drag')}else{@($Scenario)}
+ $scenarios=if($Scenario-eq 'All'){@('Functional','ExclusionControl','Exclusion','Drag','TooltipsControl','Tooltips','RepeatedActions')}else{@($Scenario)}
  foreach($currentScenario in $scenarios){
   $outputDirectory=Join-Path $artifacts $currentScenario;New-Item -ItemType Directory -Force -Path $outputDirectory|Out-Null
   @{OutputDirectory=$outputDirectory;FfmpegDirectory=(Join-Path $Repository 'components\ffmpeg-master-latest-win64-gpl\bin');MonitorDevice='';Edge='Right';Offset=0.45;Expanded=$true;KeepExpanded=$true;FullMonitor=$false;HideDuringCapture=$false;Countdown=3}|ConvertTo-Json|Set-Content -Encoding UTF8 -LiteralPath $settingsPath
-  $settingsTouched=$true;$arguments=if($currentScenario-eq 'ExclusionControl'){'--ux-test --disable-capture-exclusion'}else{'--ux-test'}
+  $settingsTouched=$true;$arguments=if($currentScenario-in @('ExclusionControl','TooltipsControl')){'--ux-test --disable-capture-exclusion'}else{'--ux-test'}
   $exe=Join-Path $Repository 'src\EagleEyes.App\bin\Debug\net11.0-windows\EagleEyes.App.exe';$app=Start-Process -FilePath $exe -ArgumentList $arguments -WindowStyle Hidden -PassThru;Log ('Scenario '+$currentScenario+' PID '+$app.Id)
   if($currentScenario-eq 'Functional'){
    Invoke-Button 'Gravar vídeo';Focus-Window 'Eagle Eyes · Selecionar área';Key 0x1B;$null=Wait-Element -name 'Gravar vídeo' -kind Button;Log 'PASS Esc initial selection returns idle'
@@ -144,6 +185,44 @@ try{
    Invoke-Button 'Descartar gravação';$null=Wait-Element -name 'Descartar gravação?' -kind Window;Invoke-Button 'Continuar gravação';$null=Wait-Element -name 'Pausar gravação' -kind Button;Log 'PASS Cancel discard restores recording state'
    Invoke-Button 'Descartar gravação';$dialog=Wait-Element -name 'Descartar gravação?' -kind Window;$confirm=$dialog.FindFirst([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.AndCondition]::new([System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Descartar gravação'),[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Button)));$confirm.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
    $null=Wait-Element -name 'Gravar vídeo' -kind Button;Assert (@(Get-ChildItem -LiteralPath $outputDirectory -Filter '*.mp4').Count-eq 1) 'Discard generated no second finalMP4';Assert (([Convert]::ToBase64String([IO.File]::ReadAllBytes($output))-eq [Convert]::ToBase64String($preservedBytes))) 'Discard preserved earlier video'
+  }elseif($currentScenario-in @('TooltipsControl','Tooltips')){
+   Select-Area $true;Invoke-Button 'Gravar';Observe-Countdown;Start-Sleep -Seconds 2
+   $samples=[Collections.Generic.List[object]]::new()
+   $samples.Add((Sample-Tooltip 'background' (Wait-Element -id RecordingStatus)))
+   $samples.Add((Sample-Tooltip 'pause' (Wait-Element -name 'Pausar gravação' -kind Button)))
+   $samples.Add((Sample-Tooltip 'duration' (Wait-Element -id RecordingDuration)))
+   [EagleUiInput]::SetCursorPos(($monitor.Left+100),($monitor.Top+$monitor.Height-150))|Out-Null;Start-Sleep -Milliseconds 300
+   $output=Save-Recording
+   $expectExcluded=$currentScenario-eq 'Tooltips'
+   foreach($sample in $samples){
+    $frame=Join-Path $outputDirectory ('tooltip-'+$sample.label+'-mp4.png')
+    & $ffmpeg -v error -nostdin -n -ss ($sample.sampleSecond.ToString('0.000',[Globalization.CultureInfo]::InvariantCulture)) -i $output -frames:v 1 -update 1 $frame;if($LASTEXITCODE-ne 0){throw 'Tooltip video frame extraction failed'}
+    $crop=[Drawing.Rectangle]::new($sample.crop.x,$sample.crop.y,$sample.crop.width,$sample.crop.height)
+    $ratio=Magenta-Ratio $frame $crop
+    $sample|Add-Member -NotePropertyName videoMagentaRatio -NotePropertyValue $ratio
+    $sample|Add-Member -NotePropertyName videoWhiteRatio -NotePropertyValue (White-Ratio $frame $crop)
+    $bitmap=[Drawing.Bitmap]::new($frame)
+    try{$preview=$bitmap.Clone($crop,[Drawing.Imaging.PixelFormat]::Format32bppArgb);try{$preview.Save((Join-Path $outputDirectory ('tooltip-'+$sample.label+'-mp4-crop.png')),[Drawing.Imaging.ImageFormat]::Png)}finally{$preview.Dispose()}}finally{$bitmap.Dispose()}
+    $sample|Add-Member -NotePropertyName expectedExcluded -NotePropertyValue $expectExcluded
+   }
+   $samples.ToArray()|ConvertTo-Json -Depth 6|Set-Content -Encoding UTF8 (Join-Path $outputDirectory 'tooltip-exclusion.json')
+   foreach($sample in $samples){Assert ($(if($expectExcluded){$sample.liveMagentaRatio-gt 0.95-and $sample.videoMagentaRatio-gt 0.95-and $sample.videoWhiteRatio-lt 0.1}else{$sample.liveMagentaRatio-lt 0.8-and $sample.videoMagentaRatio-lt 0.8-and $sample.liveWhiteRatio-gt 0.45-and $sample.videoWhiteRatio-gt 0.45})) ('Tooltip gdigrab andMP4 pixel proof '+$currentScenario+' '+$sample.label)}
+  }elseif($currentScenario-eq 'RepeatedActions'){
+   Select-Area $true
+   $start=Wait-Element -name Gravar -kind Button;$pattern=$start.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+   Invoke-Twice $pattern 'Gravar'
+   $countdown=Wait-Element -name 'Eagle Eyes · Contagem' -kind Window
+   $count=@(Elements|Where-Object {$_.Current.ControlType-eq [System.Windows.Automation.ControlType]::Window-and $_.Current.Name-eq 'Eagle Eyes · Contagem'}).Count
+   Assert ($count-eq 1) 'Two start invokes expose exactly one countdownwindow'
+   Observe-Countdown;Start-Sleep -Seconds 2
+   $sessions=@(Get-ChildItem -LiteralPath $outputDirectory -Directory -Filter '.eagle-eyes-session-*')
+   Assert ($sessions.Count-eq 1) 'Two start invokes create exactly one recording session'
+   $save=Wait-Element -name 'Parar e salvar' -kind Button;$pattern=$save.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+   Invoke-Twice $pattern 'Parar e salvar'
+   $output=Save-Recording $true
+   Start-Sleep -Milliseconds 300
+   Assert (@(Get-ChildItem -LiteralPath $outputDirectory -Filter '*.mp4').Count-eq 1) 'Two save invokes publish exactly one MP4'
+   Assert (@(Get-ChildItem -LiteralPath $outputDirectory -Directory -Filter '.eagle-eyes-session-*').Count-eq 1) 'Repeated commands never create another session'
   }elseif($currentScenario-eq 'Drag'){
    $idle=Ancestor-Window (Wait-Element -name 'Gravar vídeo' -kind Button);$before=$idle.Current.BoundingRectangle
    Drag-Point ([int]($before.Right-22)) ([int]($before.Bottom-14)) -100 80
@@ -186,9 +265,3 @@ finally{
  if($settingsTouched){if($hadSettings){[IO.File]::WriteAllBytes($settingsPath,$backup)}elseif(Test-Path -LiteralPath $settingsPath){Remove-Item -LiteralPath $settingsPath};Log 'Restored pre-test user settings'}
  Log ('ARTIFACT '+$artifacts)
 }
-
-
-
-
-
-
