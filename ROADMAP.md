@@ -156,3 +156,4 @@ Concluído. Instalador 1.2.1 gerado e validado fora do repositório com 25 verif
 ## 1.2.2 — limpeza após salvar
 Usuário confirmou o funcionamento da 1.2.1 em outro PC limpo. Implementada a limpeza somente da sessão publicada; em validação.
 Concluído localmente. Core: 70 verificações com captura real/falhas (.test-artifacts/qa-4481d6581f924a9b8f4dbef8cbfee879). Diálogo aprovado. Atualização instalada 1.2.1→1.2.2, gravação com duas pausas e pasta contendo apenas o MP4 H.264 sem áudio (.test-artifacts/installer-a63033fb6d794a35a7d5180d5db02692). Vídeos e preferências anteriores preservados. Para o teste remoto, publicar o Setup e SHA256 como release estável e consultar pelo outro PC.
+Release v1.2.2 publicada. A API pública releases/latest retornou v1.2.2 e o SHA256 do instalador publicado corresponde ao pacote testado. Pendente somente o teste de notificação no outro PC do usuário.
