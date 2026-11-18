@@ -9,27 +9,76 @@ internal static class RegionSelection
 {
     internal static Task<CaptureArea?> SelectAsync()
     {
-        var completion = new TaskCompletionSource<CaptureArea?>(); var windows = new List<SelectionWindow>();
-        void Finish(CaptureArea? area) { foreach (var w in windows) w.Close(); completion.TrySetResult(area); }
-        foreach (var monitor in Native.Monitors()) { var w = new SelectionWindow(monitor, Finish); windows.Add(w); w.Show(); }
-        if (windows.Count == 0) completion.TrySetException(new InvalidOperationException("Nenhum monitor disponível para seleção.")); else windows[0].Activate(); return completion.Task;
+        // Run continuations after the initiating mouse/key event has completely returned.
+        var completion = new TaskCompletionSource<CaptureArea?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var windows = new List<SelectionWindow>(); bool finished = false;
+        void Finish(CaptureArea? area)
+        {
+            if (finished) return;
+            finished = true;
+            foreach (var window in windows) { window.ReleaseMouseCapture(); window.Close(); }
+            completion.TrySetResult(area);
+        }
+        foreach (var monitor in Native.Monitors()) { var window = new SelectionWindow(monitor, Finish); windows.Add(window); window.Show(); }
+        if (windows.Count == 0) completion.TrySetException(new InvalidOperationException("Nenhum monitor disponível para seleção."));
+        else windows[0].Activate();
+        return completion.Task;
     }
+
     sealed class SelectionWindow : Window
     {
-        readonly Native.Monitor monitor; readonly Action<CaptureArea?> finish; readonly Canvas canvas = new();
-        readonly System.Windows.Shapes.Rectangle selection = new() { Stroke = Brushes.OrangeRed, StrokeThickness = 2, Fill = new SolidColorBrush(Color.FromArgb(35, 255, 255, 255)) };
-        Native.POINT start; bool dragging;
+        readonly Native.Monitor monitor;
+        readonly Action<CaptureArea?> finish;
+        readonly Canvas canvas = new();
+        readonly System.Windows.Shapes.Rectangle selection = new() { Stroke = Brushes.LimeGreen, StrokeThickness = 2, Fill = new SolidColorBrush(Color.FromArgb(35, 255, 255, 255)) };
+        Native.POINT start; bool dragging, spaceArmed, escapeArmed;
         internal SelectionWindow(Native.Monitor monitor, Action<CaptureArea?> finish)
         {
-            this.monitor = monitor; this.finish = finish; WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; ShowInTaskbar = false; Topmost = true; AllowsTransparency = true; Background = new SolidColorBrush(Color.FromArgb(65, 0, 0, 0)); Cursor = Cursors.Cross;
-            canvas.Children.Add(new TextBlock { Text = "Eagle Eyes · Arraste uma região neste monitor · Esc cancela", Foreground = Brushes.White, Background = Brushes.Black, Padding = new Thickness(12), FontSize = 16 }); canvas.Children.Add(selection); Content = canvas;
+            this.monitor = monitor; this.finish = finish;
+            Title = "Eagle Eyes · Selecionar área"; WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; ShowInTaskbar = false; Topmost = true; AllowsTransparency = true;
+            Background = new SolidColorBrush(Color.FromArgb(65, 0, 0, 0)); Cursor = Cursors.Cross;
+            canvas.Children.Add(new TextBlock { Text = "Arraste para selecionar uma região · Espaço: monitor sob o ponteiro · Esc: cancelar", Foreground = Brushes.White, Background = new SolidColorBrush(Color.FromRgb(27, 27, 43)), Padding = new Thickness(14), FontSize = 16 });
+            canvas.Children.Add(selection); Content = canvas;
             SourceInitialized += (_, _) => Native.Place(this, monitor.Bounds);
-            Loaded += (_, _) => Native.Place(this, monitor.Bounds);
-            KeyDown += (_, e) => { if (e.Key == Key.Escape) finish(null); };
-            MouseLeftButtonDown += (_, _) => { Native.GetCursorPos(out start); dragging = true; CaptureMouse(); };
-            MouseMove += (_, _) => { if (!dragging) return; var r = Selected(); var p = PointFromScreen(new Point(r.Left, r.Top)); var q = PointFromScreen(new Point(r.Right, r.Bottom)); Canvas.SetLeft(selection, p.X); Canvas.SetTop(selection, p.Y); selection.Width = Math.Max(0, q.X - p.X); selection.Height = Math.Max(0, q.Y - p.Y); };
-            MouseLeftButtonUp += (_, _) => { if (!dragging) return; dragging = false; ReleaseMouseCapture(); var r = Selected(); if (r.Width < 16 || r.Height < 16) { MessageBox.Show("Selecione uma região de pelo menos 16 × 16 pixels.", "Eagle Eyes"); return; } finish(new CaptureArea(r.Left, r.Top, r.Width, r.Height)); };
+            Loaded += (_, _) => { Native.Place(this, monitor.Bounds); Native.TryExcludeFromCapture(this); };
+            PreviewKeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Space) { e.Handled = true; if (!e.IsRepeat) spaceArmed = true; }
+                if (e.Key == Key.Escape) { e.Handled = true; escapeArmed = true; }
+            };
+            PreviewKeyUp += (_, e) =>
+            {
+                if (e.Key == Key.Space)
+                {
+                    e.Handled = true;
+                    if (!spaceArmed) return;
+                    spaceArmed = false;
+                    Native.GetCursorPos(out var point);
+                    var underPointer = Native.Monitors().FirstOrDefault(m => point.X >= m.Bounds.Left && point.X < m.Bounds.Right && point.Y >= m.Bounds.Top && point.Y < m.Bounds.Bottom);
+                    if (underPointer != null) finish(new CaptureArea(underPointer.Bounds.Left, underPointer.Bounds.Top, underPointer.Bounds.Width, underPointer.Bounds.Height));
+                }
+                if (e.Key == Key.Escape) { e.Handled = true; if (escapeArmed) { escapeArmed = false; finish(null); } }
+            };
+            MouseLeftButtonDown += (_, e) => { e.Handled = true; Native.GetCursorPos(out start); dragging = true; CaptureMouse(); };
+            MouseMove += (_, _) =>
+            {
+                if (!dragging) return;
+                var region = Selected(); var first = PointFromScreen(new Point(region.Left, region.Top)); var last = PointFromScreen(new Point(region.Right, region.Bottom));
+                Canvas.SetLeft(selection, first.X); Canvas.SetTop(selection, first.Y); selection.Width = Math.Max(0, last.X - first.X); selection.Height = Math.Max(0, last.Y - first.Y);
+            };
+            MouseLeftButtonUp += (_, e) =>
+            {
+                e.Handled = true; if (!dragging) return;
+                dragging = false; ReleaseMouseCapture(); var region = Selected();
+                if (region.Width < 16 || region.Height < 16) { MessageBox.Show("Selecione uma região de pelo menos 16 × 16 pixels.", "Eagle Eyes"); return; }
+                finish(new CaptureArea(region.Left, region.Top, region.Width, region.Height));
+            };
         }
-        Native.RECT Selected() { Native.GetCursorPos(out var p); int x = Math.Clamp(p.X, monitor.Bounds.Left, monitor.Bounds.Right), y = Math.Clamp(p.Y, monitor.Bounds.Top, monitor.Bounds.Bottom); int left = Math.Min(start.X, x), top = Math.Min(start.Y, y); return Native.Rectangle(left, top, Math.Abs(x - start.X), Math.Abs(y - start.Y)); }
+        Native.RECT Selected()
+        {
+            Native.GetCursorPos(out var point);
+            int x = Math.Clamp(point.X, monitor.Bounds.Left, monitor.Bounds.Right), y = Math.Clamp(point.Y, monitor.Bounds.Top, monitor.Bounds.Bottom);
+            return Native.Rectangle(Math.Min(start.X, x), Math.Min(start.Y, y), Math.Abs(x - start.X), Math.Abs(y - start.Y));
+        }
     }
 }

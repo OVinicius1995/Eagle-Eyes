@@ -1,0 +1,28 @@
+﻿{
+    "source":  "eagle-eyes-original.png",
+    "sourceSha256":  "4FB6DFD59C974351C7E954FEA789E5ECBE7F4CE80DC58664EAB4DADBAF1CB9F2",
+    "sourceWidth":  1254,
+    "sourceHeight":  1254,
+    "foregroundBounds":  {
+                             "y":  444,
+                             "width":  535,
+                             "height":  365,
+                             "x":  359
+                         },
+    "opaqueNativePixelsPreserved":  55228,
+    "antialiasedNativePixels":  5291,
+    "outputPng":  "Assets/eagle-eyes.png",
+    "outputSize":  1024,
+    "targetSymbolWidthFraction":  0.85,
+    "icoSizes":  [
+                     16,
+                     20,
+                     24,
+                     32,
+                     48,
+                     64,
+                     128,
+                     256
+                 ],
+    "method":  "Local white-matte removal with local-color unmix, preserved opaque pixels, alpha-aware resampling; no redraw or recolor."
+}

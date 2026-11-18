@@ -7,3 +7,6 @@ components/
 *.user
 *.mp4
 *.mkv
+
+# Guia de identidade visual privado, mantido somente na maquina local
+/docs/IDENTIDADE-VISUAL.md

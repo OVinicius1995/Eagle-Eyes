@@ -1,12 +1,19 @@
 ﻿param([ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version='1.0.0')
 $ErrorActionPreference='Stop'
 $repoRoot=Split-Path $PSScriptRoot -Parent
+[xml]$appProject=[IO.File]::ReadAllText((Join-Path $repoRoot 'src\EagleEyes.App\EagleEyes.App.csproj'))
+$appVersion=[string]$appProject.Project.PropertyGroup.Version
+if($Version-ne $appVersion){throw "A versão solicitada ($Version) difere do aplicativo ($appVersion). Informe -Version corretamente e prepare as notas antes de empacotar."}
+if(!(Test-Path -LiteralPath (Join-Path $repoRoot "docs\releases\v$Version.md"))){throw 'Prepare as notas da versão antes de empacotar.'}
 $releaseRoot=Join-Path $repoRoot "artifacts\releases\v$Version"
 $staging=Join-Path $releaseRoot ('package-'+[Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $staging | Out-Null
 $published=Join-Path $releaseRoot ('build-'+[Guid]::NewGuid().ToString('N'))
 & (Join-Path $PSScriptRoot 'Build.ps1') -OutputDirectory $published
 Get-ChildItem -LiteralPath $published -File | Where-Object Extension -NE '.pdb' | Copy-Item -Destination $staging
+# The native tray loads the official multi-size ICO from Assets; keep it in distributable packages.
+$publishedAssets=Join-Path $published 'Assets'
+if(Test-Path -LiteralPath $publishedAssets){Copy-Item -LiteralPath $publishedAssets -Destination (Join-Path $staging 'Assets') -Recurse}
 New-Item -ItemType Directory -Force (Join-Path $staging 'docs') | Out-Null
 Copy-Item -LiteralPath (Join-Path $repoRoot 'docs\DEPENDENCIES.md') -Destination (Join-Path $staging 'docs')
 Copy-Item -LiteralPath (Join-Path $repoRoot "docs\releases\v$Version.md") -Destination (Join-Path $staging 'NOTAS-DA-VERSAO.md')
@@ -19,7 +26,7 @@ Eagle Eyes $Version - Windows x64
 3. Obtenha uma distribuição Windows de FFmpeg com gdigrab e libx264.
    FFmpeg e FFprobe são dependências externas e não estão incluídos.
    Coloque ffmpeg.exe e ffprobe.exe em uma subpasta chamada ffmpeg ao lado
-   de EagleEyes.App.exe, ou indique a pasta nas configurações do aplicativo.
+   de EagleEyes.App.exe. Não há seleção manual dessa pasta na interface.
    Preserve licenças/avisos da distribuição obtida; veja docs/DEPENDENCIES.md.
 4. Abra EagleEyes.App.exe.
 
@@ -43,8 +50,8 @@ $hash=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $archive=[IO.Compression.ZipFile]::OpenRead($zip)
 try {
-    $entries=@($archive.Entries | ForEach-Object FullName)
-    foreach($required in @('EagleEyes.App.exe','EagleEyes.App.dll','EagleEyes.Core.dll','EagleEyes.App.runtimeconfig.json','LEIA-ME.txt')){
+    $entries=@($archive.Entries | ForEach-Object { $_.FullName.Replace('\','/') })
+    foreach($required in @('EagleEyes.App.exe','EagleEyes.App.dll','EagleEyes.Core.dll','EagleEyes.App.runtimeconfig.json','LEIA-ME.txt','Assets/eagle-eyes.ico')){
         if($entries -notcontains $required){throw "Pacote incompleto: $required"}
     }
     if($entries | Where-Object {$_ -match '(?i)(ffmpeg\.exe|ffprobe\.exe|\.mp4$|\.pdb$)'}){throw 'Conteúdo externo/temporário inesperado no pacote.'}
