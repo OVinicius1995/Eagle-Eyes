@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Automation;
@@ -28,6 +28,7 @@ internal sealed class MainWindow : Window
     Native.Monitor monitor = null!;
     bool Testing => args.Contains("--smoke-test") || args.Contains("--proof-recording") || args.Contains("--ux-test");
     bool Vertical => settings.Edge is "Left" or "Right";
+    UpdateRelease? pendingUpdate;
     bool Active => session?.State is RecordingState.Recording or RecordingState.Paused or RecordingState.Finalizing;
     IntPtr Handle => new WindowInteropHelper(this).Handle;
     internal MainWindow(string[] args)
@@ -58,6 +59,18 @@ internal sealed class MainWindow : Window
                 ReleaseFault(new IOException("O processo de captura foi encerrado inesperadamente."), "capture");
                 busy = false; Render();
             }
+        };
+        timer.Tick += (_, _) =>
+        {
+            if (pendingUpdate == null || !settings.CheckForUpdates || busy || Active || !IsVisible || OwnedWindows.Cast<Window>().Any(w => w.IsVisible)) return;
+            var release = pendingUpdate; pendingUpdate = null;
+            UserMessages.UpdateAvailable(this, release);
+        };
+        Loaded += async (_, _) =>
+        {
+            if (Testing || !settings.CheckForUpdates) return;
+            try { await Task.Delay(15000); if (IsLoaded && settings.CheckForUpdates) pendingUpdate = await UpdateService.CheckAsync(UpdateService.CurrentVersion); }
+            catch (Exception error) { AppLog.Write("update-background", error); }
         };
         timer.Start();
         collapseTimer.Tick += async (_, _) => { collapseTimer.Stop(); if (!settings.KeepExpanded && !IsMouseOver && !busy && !Active && settings.Expanded) await ToggleExpanded(); };

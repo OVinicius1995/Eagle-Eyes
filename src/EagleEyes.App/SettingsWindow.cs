@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -69,6 +69,27 @@ internal sealed class SettingsWindow : Window
         body.Children.Add(new Border { Background = new SolidColorBrush(Color.FromRgb(34, 35, 52)), CornerRadius = new CornerRadius(9), Child = shortcuts });
         body.Children.Add(new TextBlock { Text = "15 fps · Cursor incluído · Sem áudio", Foreground = Ink, FontSize = 11, Margin = new Thickness(0, 15, 0, 14) });
 
+        Section(body, "Atualizações");
+        var automaticUpdates = new CheckBox { Content = "Avisar quando houver uma nova versão", IsChecked = settings.CheckForUpdates, Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 12) };
+        AutomationProperties.SetAutomationId(automaticUpdates, "CheckForUpdates"); body.Children.Add(automaticUpdates);
+        var checkUpdate = new Button { Content = "Verificar atualizações", HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 8) };
+        checkUpdate.Style = VisualIdentity.ButtonStyle(Resources, false);
+        AutomationProperties.SetAutomationId(checkUpdate, "CheckUpdatesNow"); body.Children.Add(checkUpdate);
+        var updateStatus = new TextBlock { Text = $"Versão {UpdateService.CurrentVersion.ToString(3)} · Atualização pelo instalador", Foreground = Ink, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 0, 0, 12) };
+        body.Children.Add(updateStatus);
+        checkUpdate.Click += async (_, _) =>
+        {
+            checkUpdate.IsEnabled = false; updateStatus.Text = "Procurando uma nova versão…";
+            try
+            {
+                var release = await UpdateService.CheckAsync(UpdateService.CurrentVersion);
+                if (!IsLoaded) return;
+                updateStatus.Text = release == null ? "Nenhuma versão mais recente foi encontrada." : $"A versão {release.Version.ToString(3)} está disponível.";
+                if (release != null) UserMessages.UpdateAvailable(this, release);
+            }
+            catch (Exception error) { AppLog.Write("update-check", error); if (IsLoaded) updateStatus.Text = "Não conseguimos verificar agora. Confira sua conexão e tente novamente."; }
+            finally { if (IsLoaded) checkUpdate.IsEnabled = true; }
+        };
         var footer = new Grid { Margin = new Thickness(27, 17, 27, 24) };
         footer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); footer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); footer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var cancel = new Button { Content = "Cancelar", IsCancel = true, Padding = new Thickness(19, 9, 19, 9), Margin = new Thickness(0, 0, 10, 0) }; cancel.Style = VisualIdentity.ButtonStyle(Resources, false); cancel.Click += (_, _) => DialogResult = false; Grid.SetColumn(cancel, 1); footer.Children.Add(cancel);
@@ -76,11 +97,11 @@ internal sealed class SettingsWindow : Window
         save.Click += (_, _) =>
         {
             if (string.IsNullOrWhiteSpace(output.Text)) { UserMessages.Show(this, "Escolha a pasta onde seus vídeos serão salvos."); output.Focus(); return; }
-            var previousOutput = settings.OutputDirectory; var previousFull = settings.FullMonitor; var previousPin = settings.KeepExpanded; var previousMonitor = settings.MonitorDevice;
-            settings.OutputDirectory = output.Text.Trim(); settings.FullMonitor = mode.SelectedIndex == 1; settings.KeepExpanded = pin.IsChecked == true;
+            var previousUpdates = settings.CheckForUpdates; var previousOutput = settings.OutputDirectory; var previousFull = settings.FullMonitor; var previousPin = settings.KeepExpanded; var previousMonitor = settings.MonitorDevice;
+            settings.CheckForUpdates = automaticUpdates.IsChecked == true; settings.OutputDirectory = output.Text.Trim(); settings.FullMonitor = mode.SelectedIndex == 1; settings.KeepExpanded = pin.IsChecked == true;
             if (monitor.SelectedIndex >= 0 && monitor.SelectedIndex < monitors.Count) settings.MonitorDevice = monitors[monitor.SelectedIndex].Device;
             try { settings.Save(); DialogResult = true; }
-            catch (Exception error) { settings.OutputDirectory = previousOutput; settings.FullMonitor = previousFull; settings.KeepExpanded = previousPin; settings.MonitorDevice = previousMonitor; AppLog.Write("settings-save", error); UserMessages.Show(this, "Não foi possível salvar as configurações. Tente novamente.", error.Message); }
+            catch (Exception error) { settings.CheckForUpdates = previousUpdates; settings.OutputDirectory = previousOutput; settings.FullMonitor = previousFull; settings.KeepExpanded = previousPin; settings.MonitorDevice = previousMonitor; AppLog.Write("settings-save", error); UserMessages.Show(this, "Não foi possível salvar as configurações. Tente novamente.", error.Message); }
         };
         WindowDragBehavior.Attach(this); Loaded += (_, _) => Native.ClampToWorkArea(this);
     }

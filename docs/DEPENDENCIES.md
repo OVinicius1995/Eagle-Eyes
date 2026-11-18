@@ -11,3 +11,12 @@ A identidade e os ícones vetoriais Eagle Eyes são implementados no projeto, se
 SHA256 dos executáveis locais inspecionados em 17/11/2026:
 - ffmpeg.exe: D0DDD82AA9247BEEFCF31788E6EF9AA492E2BF1FB9CA06E67E487CD59F8F1EB1
 - ffprobe.exe: 0038F578F03161F23F6016142E2CD31BA30A290FA9B6BD1B7DEF3D06DA47EACE
+
+## Ferramenta de instalação
+
+Inno Setup 6.7.4, origem oficial https://github.com/jrsoftware/issrc/releases/tag/is-6_7_4 (JRSoftware/Pyrsys B.V.). Compilador é ferramenta de desenvolvimento, mantido somente em artifacts/tools ignorado pelo Git. Licença/termos do Inno Setup em https://jrsoftware.org/isinfo.php e no arquivo de licença da instalação; o motor de setup gerado acompanha o instalador conforme esses termos. Não é biblioteca incorporada ao aplicativo.
+O pacote self-contained inclui o runtime Microsoft .NET Windows Desktop e preserva seus arquivos LICENSE/ThirdPartyNotices. Nenhum novo pacote NuGet de terceiros foi adicionado. FFmpeg continua fora do instalador até confirmar proveniência e distribuição correspondente.
+ 
+## Motor instalado pelo assistente 1.2.1
+
+O assistente obtém diretamente do distribuidor Gyan a [release FFmpeg 9.0.2 Essentials para Windows x64](https://github.com/GyanD/codexffmpeg/releases/tag/9.0.2). Arquivo ffmpeg-9.0.2-essentials_build.zip, 114768076 bytes, SHA256 60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba. A instalação preserva o LICENSE GPLv3 e o README originais na pasta engine/ffmpeg-9.0.2-essentials_build. O instalador utiliza download HTTPS direto e valida o hash antes da extração. A cópia de desenvolvimento continua em components.

@@ -11,7 +11,7 @@ internal static class FFmpegLocation
         string root = applicationDirectory ?? AppContext.BaseDirectory;
         if (!Path.IsPathFullyQualified(root)) throw new ArgumentException("A pasta do aplicativo deve ser absoluta.", nameof(applicationDirectory));
         root = Path.GetFullPath(root);
-        var candidates = new List<string> { Path.Combine(root, "ffmpeg") };
+        var candidates = new List<string> { Path.Combine(root, "engine", "ffmpeg-9.0.2-essentials_build", "bin"), Path.Combine(root, "ffmpeg") };
         var ancestor = new DirectoryInfo(root);
         for (int depth = 0; ancestor != null && depth < 8; depth++, ancestor = ancestor.Parent)
             candidates.Add(Path.Combine(ancestor.FullName, "components", "ffmpeg-master-latest-win64-gpl", "bin"));

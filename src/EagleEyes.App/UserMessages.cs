@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,6 +38,19 @@ internal static class UserMessages
         window.ShowDialog();
     }
 
+    internal static void UpdateAvailable(Window owner, UpdateRelease release)
+    {
+        var (window, _, actions) = Create(owner, "Nova versão disponível", $"O Eagle Eyes {release.Version.ToString(3)} está disponível. Abra a página oficial para baixar o instalador. Salve sua gravação e saia do Eagle Eyes antes de instalar.");
+        var later = Button("Agora não", window.Resources); later.IsCancel = true;
+        later.Click += (_, _) => window.DialogResult = false;
+        var open = Button("Abrir versão", window.Resources, true); open.IsDefault = true;
+        open.Click += (_, _) =>
+        {
+            try { Process.Start(new ProcessStartInfo(release.Page.AbsoluteUri) { UseShellExecute = true }); window.DialogResult = true; }
+            catch (Exception error) { AppLog.Write("update-open", error); Show(window, "Não foi possível abrir o navegador. Tente novamente."); }
+        };
+        actions.Children.Add(later); actions.Children.Add(open); window.ShowDialog();
+    }
     internal static bool ConfirmDiscard(Window owner)
     {
         var (window, _, actions) = Create(owner, "Descartar gravação?", "O vídeo desta gravação será apagado. Essa ação não pode ser desfeita.");

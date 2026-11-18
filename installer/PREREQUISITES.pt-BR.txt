@@ -1,0 +1,1 @@
+﻿O assistente baixa e verifica os componentes de gravação (FFmpeg, aproximadamente 110 MiB). Mantenha a conexão com a internet até a instalação terminar. Depois, abra o Eagle Eyes para gravar.
