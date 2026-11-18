@@ -122,3 +122,11 @@ Estado: concluído localmente, sem push ou release. O guia Markdown é privado p
 
 Próximo passo: validar manualmente pelo Iniciar.cmd se desejado. Nenhuma implementação ficou em andamento. O arquivo privado permanece apenas na máquina. Nenhuma publicação autorizada nesta etapa; o pedido de privacidade foi interpretado para o guia .md solicitado, sem alterar os assets de marca já rastreados em commits anteriores. Confirmar alcance adicional antes de eventual publicação futura.
 Pendentes de ambiente: outras escalas/DPI e validação visual do usuário; Core/captura não alterado, não repetir regressão completa sem necessidade.
+
+## Instalador e atualização — em andamento (18/11/2026)
+- [x] Commit 9920f71 conferido: HEAD e origin/feature/ux-1.1 coincidem; árvore limpa; guia privado ignorado e não rastreado.
+- [x] Contratos e propriedade definidos no AGENTS antes de implementar; líder mantém sequencialmente.
+- [ ] Instalador por usuário com atalhos/ícone e runtime incluído, protegendo aplicativo em execução.
+- [ ] Consulta manual/automática de releases estáveis; atualização supervisionada pela página oficial e instalador. Sem atualização silenciosa nesta etapa.
+- [ ] Build, testes de respostas remotas/versões, geração e smoke de instalação.
+- [ ] Registrar evidências, limitações FFmpeg/assinatura, commit local e ponto exato de continuidade. Nenhum push/release autorizado neste pedido.
