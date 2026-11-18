@@ -165,3 +165,7 @@ A versão [1.2.2](https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.2.
 O usuário confirmou que a 1.2.1 funciona no outro PC. No ambiente de teste, a atualização de 1.2.1 para 1.2.2 passou e uma gravação com duas pausas deixou somente o MP4 na pasta de saída. A prova de falha confirmou que os trechos foram preservados.
 
 **Próximo passo no outro PC:** com a 1.2.1 instalada, abrir Configurações → Verificar atualizações e confirmar que aparece a 1.2.2. Baixar o instalador pela opção Abrir versão, sair do Eagle Eyes e instalar. Gravar um vídeo em uma pasta vazia, pausar, retomar e salvar. Confirmar que o MP4 reproduz e que a pasta contém apenas o vídeo. Registrar aqui o resultado informado pelo usuário.
+
+## Validação da atualização 1.2.2 no outro PC
+
+O usuário confirmou que realizou o teste no outro PC e que o resultado foi satisfatório. Essa confirmação encerra a pendência de validação manual registrada no checkpoint anterior. As evidências dos testes automatizados permanecem na seção da versão 1.2.2.
