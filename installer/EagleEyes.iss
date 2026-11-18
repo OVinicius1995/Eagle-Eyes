@@ -22,6 +22,7 @@ CloseApplications=no
 RestartApplications=no
 Compression=lzma2
 SolidCompression=yes
+ArchiveExtraction=full
 WizardStyle=modern
 DisableProgramGroupPage=yes
 InfoBeforeFile=PREREQUISITES.pt-BR.txt
@@ -30,6 +31,7 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na área de trabalho"; Flags: unchecked
 [Files]
+Source: "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip"; DestName: "ffmpeg.zip"; DestDir: "{app}\engine"; Hash: "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"; ExternalSize: 114768076; Flags: external download extractarchive recursesubdirs ignoreversion
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{group}\Eagle Eyes"; Filename: "{app}\EagleEyes.App.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\eagle-eyes.ico"

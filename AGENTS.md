@@ -78,3 +78,5 @@ Propriedade: líder src/EagleEyes.App/Update*, Settings.cs, SettingsWindow.cs, M
 
 ## Estado final instalador/atualização 1.2.0
 Etapa concluída localmente; ver último checkpoint ROADMAP. Instalador final compilado com Inno Setup6.7.4, não com o compilador7 experimental. Runtime incluído com licenças, FFmpeg externo. Consulta manual/aviso opcional implementados; atualização supervisionada pela página oficial e instalador. Não afirmar download/aplicação silenciosos, assinatura ou rollback. Build/scripts/testes e entrega em docs/INSTALLATION.md. Instalação1.1→1.2 e remoção isoladas aprovadas. Não repetir como pendente a falha antiga do caminho do atalho no teste. Nenhum novo release/push autorizado. Guia privado intocado. Próxima etapa é validação manual/publicação sob pedido específico.
+
+Desde 1.2.1, o instalador baixa o ZIP fixo GyanD, valida SHA256 e instala em engine. FFmpegLocation prioriza esse motor e mantém os caminhos portáteis. Validar gravação instalada fora dos ancestrais do repositório.

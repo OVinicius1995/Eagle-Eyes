@@ -1,4 +1,4 @@
-﻿# Instalação e atualizações
+# Instalação e atualizações
 
 ## Gerar o instalador
 
@@ -8,11 +8,11 @@ Pré-requisitos de desenvolvimento: SDK estável fixado em global.json e Inno Se
 powershell -File scripts/Prepare-Installer.ps1 -CompilerPath 'C:\caminho\Inno Setup\ISCC.exe'
 ```
 
-Saída: `artifacts/installer/1.2.0/EagleEyes-1.2.0-win-x64-Setup.exe` e `.sha256`. Versão vem do projeto App. Cada build usa pasta de publicação nova; os arquivos são selecionados dessa pasta, nunca da raiz. Guia privado, vídeos, PDB e FFmpeg são rejeitados. Runtime e seus arquivos LICENSE/ThirdPartyNotices são preservados.
+Saída: `artifacts/installer/1.2.1/EagleEyes-1.2.1-win-x64-Setup.exe` e `.sha256`. Versão vem do projeto App. Cada build usa pasta de publicação nova; os arquivos são selecionados dessa pasta, nunca da raiz. Guia privado, vídeos, PDB e FFmpeg são rejeitados. Runtime e seus arquivos LICENSE/ThirdPartyNotices são preservados.
 
 Instalação por usuário, sem exigir administrador, em `%LOCALAPPDATA%\Programs\Eagle Eyes`. Atalho no menu Iniciar, atalho na área de trabalho opcional, ícone oficial e entrada de desinstalação. AppId fixo identifica a mesma instalação nas próximas versões. Não escolher a pasta de uma cópia portátil existente: instalar em pasta própria.
 
-O instalador NÃO contém FFmpeg. Origem exata da compilação fornecida ainda não está confirmada. Para gravar na instalação, colocar `ffmpeg.exe` e `ffprobe.exe` juntos em `{pasta do aplicativo}\ffmpeg`. A instalação avisa isso no LEIA-ME; o aplicativo alerta ao tentar gravar sem os componentes. O runtime incluído não substitui FFmpeg. A consulta de atualizações funciona sem FFmpeg.
+O assistente baixa o FFmpeg 9.0.2 diretamente da release do distribuidor, confere o SHA256 e instala o pacote em engine. Conecte-se à internet durante a instalação e as atualizações. Ao terminar, abra o Eagle Eyes e escolha a área de gravação. A gravação funciona offline.
 
 ## Atualizar
 

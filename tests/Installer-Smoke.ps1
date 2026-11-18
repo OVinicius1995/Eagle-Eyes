@@ -5,7 +5,7 @@ $key='HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{A15849CE-44AD-4
 if(Test-Path $key){throw 'Já existe instalação Eagle Eyes registrada. Teste abortado para preservá-la.'}
 if(Test-Path (Join-Path ([Environment]::GetFolderPath('Programs')) 'Eagle Eyes\Eagle Eyes.lnk')){throw 'Atalho anterior encontrado; teste abortado para preservá-lo.'}
 if(Get-Process EagleEyes.App -ErrorAction SilentlyContinue){throw 'Feche o Eagle Eyes antes do teste isolado.'}
-$id=[guid]::NewGuid().ToString('N'); $work=Join-Path $repo ".test-artifacts\installer-$id"; $app=Join-Path $work 'installed'; New-Item -ItemType Directory -Force $work | Out-Null
+$id=[guid]::NewGuid().ToString('N'); $work=Join-Path $repo ".test-artifacts\installer-$id"; $app=Join-Path ([IO.Path]::GetTempPath()) "Eagle-Eyes-QA-$id"; New-Item -ItemType Directory -Force $work | Out-Null
 $checks=[Collections.Generic.List[string]]::new()
 function Assert($condition,[string]$message){if(!$condition){throw $message}; $checks.Add($message); Write-Host "PASS $message"}
 function RunSetup([string]$file){$p=Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/GROUP="EagleEyes-Test-'+$id+'"'),('/LOG="'+$work+'\setup-'+[guid]::NewGuid().ToString('N')+'.log"')) -Wait -PassThru -WindowStyle Hidden; Assert ($p.ExitCode -eq 0) 'Setup exits successfully'}
@@ -18,13 +18,13 @@ try {
     'external component sentinel' | Set-Content "$app\ffmpeg\user-component.txt"
     'user video sentinel' | Set-Content "$app\prior-video.mp4"
     RunSetup $Installer
-    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.0.0') 'Installed 1.2.0 executable'
+    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.1.0') 'Installed 1.2.1 executable'
     Assert (Test-Path "$app\coreclr.dll") 'Self-contained runtime present'
     Assert (Test-Path "$app\Assets\eagle-eyes.ico") 'Official icon installed'
     Assert (!(Test-Path "$app\docs\IDENTIDADE-VISUAL.md")) 'Private guide absent'
     Assert (Test-Path "$app\ffmpeg\user-component.txt") 'External component preserved on upgrade'
     Assert (Test-Path "$app\prior-video.mp4") 'Existing user video preserved on upgrade'
-    Assert ((Get-ItemProperty $key).DisplayVersion -eq '1.2.0') 'Per-user uninstall registration updated'
+    Assert ((Get-ItemProperty $key).DisplayVersion -eq '1.2.1') 'Per-user uninstall registration updated'
     $link=Join-Path ([Environment]::GetFolderPath('Programs')) "Eagle Eyes\Eagle Eyes.lnk"
     Assert (Test-Path $link) 'Start menu shortcut created'
     $shortcut=(New-Object -ComObject WScript.Shell).CreateShortcut($link)
@@ -35,6 +35,16 @@ try {
     if(!$process.WaitForExit(30000)){throw 'Installed application smoke timed out; no process terminated automatically.'}
     Assert ($process.ExitCode -eq 0) 'Installed application runs and exits normally'
     Assert ((Get-Content $report -Raw | ConvertFrom-Json).trayRegistered) 'Installed application registers tray icon'
+    $engine=Join-Path $app 'engine\ffmpeg-9.0.2-essentials_build\bin'
+    Assert (Test-Path "$engine\ffmpeg.exe") 'Recorder installed automatically'
+    $capture=Join-Path $work 'recording'
+    $proof=Join-Path $work 'proof.txt'
+    $process=Start-Process "$app\EagleEyes.App.exe" -ArgumentList @('--proof-recording','--output',('"'+$capture+'"'),'--report',('"'+$proof+'"')) -WindowStyle Hidden -PassThru
+    if(!$process.WaitForExit(60000)){throw 'Recording proof timed out'}
+    $video=Get-Content $proof -TotalCount 1
+    Assert (Test-Path -LiteralPath $video -PathType Leaf) 'Installed app saved a recording after two pauses'
+    $media=(& "$engine\ffprobe.exe" -v error -show_streams -show_format -of json $video | Out-String | ConvertFrom-Json)
+    Assert ($media.streams.Count -eq 1 -and $media.streams[0].codec_name -eq 'h264' -and [double]::Parse($media.format.duration,[cultureinfo]::InvariantCulture) -gt 0) 'MP4 contains H.264 video only'
     $mutex=[Threading.Mutex]::new($true,'Local\EagleEyes.Desktop')
     try {
         $blocked=Start-Process $Installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"')) -Wait -PassThru -WindowStyle Hidden

@@ -29,7 +29,7 @@ foreach($runtime in $deps.libraries.PSObject.Properties.Name | Where-Object {$_ 
 }
 Copy-Item "$repo\docs\DEPENDENCIES.md" "$publish\DEPENDENCIES.md"
 Copy-Item (Join-Path (Split-Path $CompilerPath -Parent) 'license.txt') "$publish\INNO-LICENSE.txt"
-$readme = 'Eagle Eyes - Windows x64. Runtime .NET incluído. FFmpeg NÃO está incluído.', 'Antes de gravar, crie a pasta ffmpeg ao lado de EagleEyes.App.exe e coloque nela ffmpeg.exe e ffprobe.exe de uma distribuição confiável e licenciada.', 'Atualizações preservam essa pasta, preferências em LocalAppData/EagleEyes e seus vídeos.', 'Configurações > Verificar atualizações abre a versão oficial. Salve sua gravação e SAIA do Eagle Eyes antes de instalar.'
+$readme = 'O instalador prepara o FFmpeg automaticamente. Para gravar, abra o Eagle Eyes e escolha a área.'
 $readme | Set-Content -Encoding UTF8 "$publish\LEIA-ME.txt"
 if(Get-ChildItem $publish -Recurse -File | Where-Object { $_.Name -match '^(ffmpeg|ffprobe)\.exe$|IDENTIDADE-VISUAL|\.mp4$|\.pdb$' }) { throw 'Arquivo proibido no pacote.' }
 $previousVersion=$env:EAGLE_EYES_VERSION; $previousPublish=$env:EAGLE_EYES_PUBLISH; $previousOutput=$env:EAGLE_EYES_INSTALLER_OUTPUT
