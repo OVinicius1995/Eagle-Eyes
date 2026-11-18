@@ -67,3 +67,6 @@ Líder assume os arquivos de QA para conclusão sequencial, pois o agente ficou 
 
 ## Estado final da marca e configurações
 Etapa concluída, testes e executável local atualizados. PNG/ICO oficiais preservados, ícones funcionais separados, FFmpeg somente pastas padrão e alerta de ausência. Não retomar como pendente a correção do TextBox: foi corrigida e UIA repetido. Próximo pedido deve partir do checkpoint final em ROADMAP; não publicar sem autorização. Core não alterado. O líder assumiu o QA indisponível e todos os arquivos podem ser mantidos pelo líder na próxima etapa.
+
+## Tema compartilhado e guia privado
+UserMessages e SettingsWindow usam VisualIdentity/Design/EagleEyes.Theme.xaml para impedir divergência de botões. A guia pessoal docs/IDENTIDADE-VISUAL.md é PRIVADA, ignorada e nunca rastreada. Não usar git add -f, copiar seu conteúdo para arquivos públicos, anexar a release ou incluí-la no pacote sem autorização explícita. O teste de design não deve falhar somente porque esse arquivo privado não existe em outra cópia. Assets de marca anteriores continuam rastreados; não publicar nada sem novo pedido e esclarecimento de eventual alcance adicional de privacidade. UI componente21checks e build Release passaram; ver último checkpoint do ROADMAP.

@@ -109,3 +109,16 @@ Estado: etapa concluída localmente. Branch feature/ux-1.1; release público v1.
 Checkpoint e84d775 preservou todos os arquivos antes da retomada final. O agente QA ficou indisponível e o líder concluiu sequencialmente, sem descartar resultados anteriores. Proveniência e transformação detalhadas em docs/BRANDING.md; resultados em docs/QA.md. Nenhuma imagem enviada a conversores externos.
 Próximo passo ao retornar: ler AGENTS/ROADMAP, conferir Git/processos e aguardar a validação manual do usuário pelo Iniciar.cmd. Nenhuma implementação ficou em andamento. Não refazer assets nem a regressão inteira sem mudança relevante. Novo release/push depende de pedido do usuário.
 Pendências manuais: outras escalas125%/150%, DPI misto/múltiplos monitores e aparência/posição real do ícone na bandeja/overflow, controlada pelo Windows. Ícones de atalhos externos eventualmente criados pelo usuário não foram testados; não existe instalador nesta versão.
+
+## Diálogos e guia de identidade visual - etapa atual
+Estado: concluído localmente, sem push ou release. O guia Markdown é privado por pedido do usuário.
+- [x] Extraído o tema aprovado para src/EagleEyes.App/Design/EagleEyes.Theme.xaml; configurações e mensagens usam VisualIdentity.CreateResources.
+- [x] Abrir pasta usa ação secundária escura; Concluir usa ação primária verde. Fonte12, raio6, padding19/9, altura mínima36, borda/foco/hover/desabilitado compartilhados. Eventos e papéis padrão/cancelamento preservados.
+- [x] Guia completo criado localmente em docs/IDENTIDADE-VISUAL.md com cores, tipografia, medidas, iconografia, marca e exemplos de reutilização.
+- [x] Guia adicionado ao .gitignore, nunca rastreado e ausente da pasta do executável; não copiar seu conteúdo para documentos públicos ou pacotes. Testes toleram sua ausência em outras cópias do repositório.
+- [x] Build Release sem erros/avisos, nove verificações básicas Core e executável local atualizado no caminho habitual artifacts/eagle-eyes/EagleEyes.App.exe.
+- [x] Testes de componentes:21 aprovados em .test-artifacts/design-7c1ff0120fcf47729be0edfe134fae22. Diálogo real renderizado, mesmas cores/estilos das configurações, dimensões, template arredondado/foco, botões habilitados e Concluir fechando o modal por evento real. Papéis Enter/Esc conferidos via IsDefault/IsCancel, sem afirmar envio de teclas físicas.
+- [x] Previews saved-dialog.png/settings.png inspecionados pelo líder. Abrir pasta manteve o handler existente; não se abriu o Explorer durante este teste de aparência.
+
+Próximo passo: validar manualmente pelo Iniciar.cmd se desejado. Nenhuma implementação ficou em andamento. O arquivo privado permanece apenas na máquina. Nenhuma publicação autorizada nesta etapa; o pedido de privacidade foi interpretado para o guia .md solicitado, sem alterar os assets de marca já rastreados em commits anteriores. Confirmar alcance adicional antes de eventual publicação futura.
+Pendentes de ambiente: outras escalas/DPI e validação visual do usuário; Core/captura não alterado, não repetir regressão completa sem necessidade.

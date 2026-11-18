@@ -33,7 +33,7 @@ internal static class UserMessages
                 Content = new TextBox { Text = details, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 180, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }
             });
         }
-        var ok = Button("Entendi"); ok.IsDefault = true; ok.IsCancel = true;
+        var ok = Button("Entendi", window.Resources, true); ok.IsDefault = true; ok.IsCancel = true;
         ok.Click += (_, _) => window.DialogResult = true; actions.Children.Add(ok);
         window.ShowDialog();
     }
@@ -41,9 +41,9 @@ internal static class UserMessages
     internal static bool ConfirmDiscard(Window owner)
     {
         var (window, _, actions) = Create(owner, "Descartar gravação?", "O vídeo desta gravação será apagado. Essa ação não pode ser desfeita.");
-        var keep = Button("Continuar gravação"); keep.IsDefault = true; keep.IsCancel = true;
+        var keep = Button("Continuar gravação", window.Resources, true); keep.IsDefault = true; keep.IsCancel = true;
         keep.Click += (_, _) => window.DialogResult = false;
-        var discard = Button("Descartar gravação"); discard.Click += (_, _) => window.DialogResult = true;
+        var discard = Button("Descartar gravação", window.Resources); discard.Click += (_, _) => window.DialogResult = true;
         actions.Children.Add(keep); actions.Children.Add(discard);
         return window.ShowDialog() == true;
     }
@@ -51,14 +51,14 @@ internal static class UserMessages
     internal static void Saved(Window owner, string output)
     {
         var (window, panel, actions) = Create(owner, "Eagle Eyes", "Seu vídeo foi salvo!");
-        panel.Children.Insert(1, new TextBlock { Text = Path.GetFileName(output), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0), Foreground = Brushes.LightGray });
-        var open = Button("Abrir pasta");
+        panel.Children.Insert(1, new TextBlock { Text = Path.GetFileName(output), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0), Foreground = (Brush)window.Resources["EagleEyes.Text.Muted"] });
+        var open = Button("Abrir pasta", window.Resources);
         open.Click += (_, _) =>
         {
             try { Process.Start(new ProcessStartInfo("explorer.exe") { Arguments = "/select,\"" + output + "\"", UseShellExecute = true }); }
             catch (Exception ex) { AppLog.Write("open-folder", ex); Show(window, "Não foi possível abrir a pasta. Você pode acessá-la pelo Explorador de Arquivos.", output); }
         };
-        var done = Button("Concluir"); done.IsDefault = true; done.IsCancel = true;
+        var done = Button("Concluir", window.Resources, true); done.IsDefault = true; done.IsCancel = true;
         done.Click += (_, _) => window.DialogResult = true;
         actions.Children.Add(open); actions.Children.Add(done);
         window.ShowDialog();
@@ -67,6 +67,10 @@ internal static class UserMessages
     static (Window Window, StackPanel Panel, StackPanel Actions) Create(Window owner, string title, string message)
     {
         var window = new Window { Title = title, Owner = owner, Width = 490, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, ShowInTaskbar = false, Topmost = true, Background = new SolidColorBrush(Color.FromRgb(27, 27, 43)), Foreground = Brushes.White };
+        window.Resources = VisualIdentity.CreateResources();
+        window.Background = (Brush)window.Resources["EagleEyes.Surface.Window"];
+        window.Foreground = (Brush)window.Resources["EagleEyes.Text.Primary"];
+        window.FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(24) };
         panel.Children.Add(new TextBlock { Text = message, FontSize = 16, TextWrapping = TextWrapping.Wrap });
         var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 22, 0, 0) };
@@ -74,5 +78,5 @@ internal static class UserMessages
         window.SourceInitialized += (_, _) => Native.TryExcludeFromCapture(window);
         return (window, panel, actions);
     }
-    static Button Button(string text) => new() { Content = text, Padding = new Thickness(13, 8, 13, 8), Margin = new Thickness(6, 0, 0, 0) };
+    static Button Button(string text, ResourceDictionary resources, bool primary = false) => new() { Content = text, Style = VisualIdentity.ButtonStyle(resources, primary), Margin = new Thickness(8, 0, 0, 0) };
 }

@@ -15,7 +15,7 @@ internal sealed class SettingsWindow : Window
     {
         Title = "Eagle Eyes · Configurações"; Width = 568; Height = 648; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; ShowInTaskbar = false; AllowsTransparency = true; Background = Brushes.Transparent; Topmost = true;
-        Resources = (ResourceDictionary)XamlReader.Parse(ControlResources);
+        Resources = VisualIdentity.CreateResources();
         var shell = new Grid();
         shell.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         shell.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -71,8 +71,8 @@ internal sealed class SettingsWindow : Window
 
         var footer = new Grid { Margin = new Thickness(27, 17, 27, 24) };
         footer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); footer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); footer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var cancel = new Button { Content = "Cancelar", IsCancel = true, Padding = new Thickness(19, 9, 19, 9), Margin = new Thickness(0, 0, 10, 0) }; cancel.Click += (_, _) => DialogResult = false; Grid.SetColumn(cancel, 1); footer.Children.Add(cancel);
-        var save = new Button { Content = "Salvar", IsDefault = true, Background = new SolidColorBrush(Color.FromRgb(43, 124, 83)), BorderBrush = new SolidColorBrush(Color.FromRgb(58, 155, 105)), Padding = new Thickness(23, 9, 23, 9) }; Grid.SetColumn(save, 2); footer.Children.Add(save); Grid.SetRow(footer, 2); shell.Children.Add(footer);
+        var cancel = new Button { Content = "Cancelar", IsCancel = true, Padding = new Thickness(19, 9, 19, 9), Margin = new Thickness(0, 0, 10, 0) }; cancel.Style = VisualIdentity.ButtonStyle(Resources, false); cancel.Click += (_, _) => DialogResult = false; Grid.SetColumn(cancel, 1); footer.Children.Add(cancel);
+        var save = new Button { Content = "Salvar", IsDefault = true }; save.Style = VisualIdentity.ButtonStyle(Resources, true); Grid.SetColumn(save, 2); footer.Children.Add(save); Grid.SetRow(footer, 2); shell.Children.Add(footer);
         save.Click += (_, _) =>
         {
             if (string.IsNullOrWhiteSpace(output.Text)) { UserMessages.Show(this, "Escolha a pasta onde seus vídeos serão salvos."); output.Focus(); return; }
@@ -96,29 +96,4 @@ internal sealed class SettingsWindow : Window
         var row = new Grid { Margin = new Thickness(0, 0, 0, 5) }; row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         row.Children.Add(new TextBlock { Text = label, Foreground = Ink, FontSize = 12 }); var shortcut = new TextBlock { Text = keys, Foreground = Brushes.White, FontFamily = new FontFamily("Consolas"), FontSize = 12 }; Grid.SetColumn(shortcut, 1); row.Children.Add(shortcut); panel.Children.Add(row);
     }
-    const string ControlResources = """
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Style TargetType="Button">
-    <Setter Property="Foreground" Value="#F1F2F8"/><Setter Property="Background" Value="#2B2C40"/><Setter Property="BorderBrush" Value="#414359"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Cursor" Value="Hand"/><Setter Property="FontSize" Value="12"/>
-    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Border" Property="Opacity" Value=".8"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Border" Property="BorderBrush" Value="#B7B9CD"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Border" Property="Opacity" Value=".4"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-  </Style>
-  <Style TargetType="TextBox">
-    <Setter Property="Foreground" Value="#F1F2F8"/><Setter Property="CaretBrush" Value="White"/><Setter Property="Background" Value="#232436"/><Setter Property="BorderBrush" Value="#414359"/><Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="12"/><Setter Property="SelectionBrush" Value="#397F62"/>
-    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border x:Name="Border" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="0"/></Border><ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Border" Property="BorderBrush" Value="#8E96B7"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-  </Style>
-  <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="#F1F2F8"/><Setter Property="Padding" Value="10,9"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Item" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Item" Property="Background" Value="#3A3D55"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Item" Property="Background" Value="#34394E"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
-  <Style TargetType="ComboBox">
-    <Setter Property="Foreground" Value="#F1F2F8"/><Setter Property="Background" Value="#232436"/><Setter Property="BorderBrush" Value="#414359"/><Setter Property="FontSize" Value="12"/><Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
-    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox"><Grid><ToggleButton x:Name="Toggle" Focusable="False" IsChecked="{Binding IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press"><ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="#232436" BorderBrush="#414359" BorderThickness="1" CornerRadius="6"><Path Data="M0,0 L4,4 L8,0" Stroke="#B7B9CD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/></Border></ControlTemplate></ToggleButton.Template></ToggleButton><ContentPresenter IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" Margin="10,0,31,0" VerticalAlignment="Center"/><Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade"><Border Background="#282A3D" BorderBrush="#414359" BorderThickness="1" CornerRadius="6" MinWidth="{Binding ActualWidth,RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="240"><ScrollViewer Margin="3"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer></Border></Popup></Grid><ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter Property="BorderBrush" Value="#8E96B7"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-  </Style>
-  <Style TargetType="CheckBox">
-    <Setter Property="FontSize" Value="13"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="25"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border x:Name="Box" Width="17" Height="17" HorizontalAlignment="Left" Background="#232436" BorderBrush="#70748F" BorderThickness="1" CornerRadius="4"/><Path x:Name="Mark" Visibility="Collapsed" Data="M3,8 L7,12 L14,4" Width="17" Height="17" HorizontalAlignment="Left" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/><ContentPresenter Grid.Column="1" VerticalAlignment="Center"/></Grid><ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Box" Property="Background" Value="#2B7C53"/><Setter TargetName="Box" Property="BorderBrush" Value="#42996E"/><Setter TargetName="Mark" Property="Visibility" Value="Visible"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="#B7B9CD"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-  </Style>
-</ResourceDictionary>
-""";
 }
-
-
-
-
-
