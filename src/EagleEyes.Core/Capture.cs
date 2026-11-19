@@ -259,21 +259,53 @@ public sealed class RecordingSession : IDisposable
     async Task StartSegment()
     {
         var a = area!;
+        const string pad = "pad=ceil(iw/2)*2:ceil(ih/2)*2";
+        var output = DesktopDuplication.Find(a);
+        if (output != null)
+        {
+            string source = FormattableString.Invariant($"ddagrab=output_idx={output.Output}:offset_x={output.OffsetX}:offset_y={output.OffsetY}:video_size={a.Width}x{a.Height}:framerate=15:draw_mouse=1");
+            string[] gpu = ["-init_hw_device", $"d3d11va=desktop:{output.Adapter}", "-filter_hw_device", "desktop",
+                "-filter_complex", $"{source},hwdownload,format=bgra,{pad}[video]", "-map", "[video]"];
+            // Use a different path on fallback so even a failed startup's partial output survives.
+            var gpuPath = OwnFile($"segment-{segments.Count:D4}-dxgi.mp4");
+            if (await TryStartCapture(gpu, gpuPath, true)) { segments.Add(gpuPath); return; }
+        }
         var path = OwnFile($"segment-{segments.Count:D4}.mp4");
+        string[] gdi = ["-f", "gdigrab", "-framerate", "15", "-draw_mouse", "1",
+            "-offset_x", a.X.ToString(CultureInfo.InvariantCulture), "-offset_y", a.Y.ToString(CultureInfo.InvariantCulture),
+            "-video_size", $"{a.Width}x{a.Height}", "-i", "desktop", "-map", "0:v:0", "-vf", pad];
+        if (!await TryStartCapture(gdi, path, false)) throw new IOException($"FFmpeg não iniciou a captura. {Log()}");
+        segments.Add(path);
+    }
+
+    async Task<bool> TryStartCapture(string[] input, string path, bool waitForGpu)
+    {
         lock (logLock) errors.Clear();
         Interlocked.Exchange(ref segmentMicroseconds, 0);
         captureReaders?.Dispose();
         captureReaders = new CancellationTokenSource();
-        capture = Process.Start(Info(ffmpegPath, ["-hide_banner", "-progress", "pipe:1", "-stats_period", "0.2", "-nostats", "-n", "-f", "gdigrab", "-framerate", "15", "-draw_mouse", "1", "-offset_x", a.X.ToString(CultureInfo.InvariantCulture), "-offset_y", a.Y.ToString(CultureInfo.InvariantCulture), "-video_size", $"{a.Width}x{a.Height}", "-i", "desktop", "-map", "0:v:0", "-an", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p", "-r", "15", path])) ?? throw new IOException("Não foi possível iniciar FFmpeg.");
+        capture = Process.Start(Info(ffmpegPath, ["-hide_banner", "-progress", "pipe:1", "-stats_period", "0.2", "-nostats", "-n",
+            .. input, "-an", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "15", path]))
+            ?? throw new IOException("Não foi possível iniciar FFmpeg.");
         stderrTask = Drain(capture.StandardError, errors, captureReaders.Token);
         progressTask = ReadProgress(capture.StandardOutput, Interlocked.Increment(ref captureGeneration), captureReaders.Token);
         await Task.Delay(500);
-        if (capture.HasExited)
+        if (waitForGpu)
         {
-            await FinishCaptureReaders();
-            throw new IOException($"FFmpeg não iniciou a captura. {Log()}");
+            var elapsed = Stopwatch.StartNew();
+            while (!capture.HasExited && Interlocked.Read(ref segmentMicroseconds) == 0 && elapsed.Elapsed < TimeSpan.FromSeconds(3))
+                await Task.Delay(50);
+            if (!capture.HasExited && Interlocked.Read(ref segmentMicroseconds) == 0)
+            {
+                if (!await EndCaptureForDiscard()) throw new IOException("Não foi possível encerrar a tentativa de captura DXGI.");
+                return false;
+            }
         }
-        segments.Add(path);
+        if (!capture.HasExited) return true;
+        await FinishCaptureReaders();
+        capture.Dispose();
+        capture = null;
+        return false;
     }
     async Task EndSegment()
     {

@@ -177,3 +177,11 @@ Implementado o botão Atualizar nas configurações e no aviso automático. O do
 Build Release aprovado. Verificador passou em 31 verificações, incluindo download real da release pública. A suíte Core passou em 70 asserções com captura e falhas. O teste WPF gravou, pausou, retomou e salvou enquanto o atualizador recusava as tentativas de instalação. Também confirmou o cancelamento durante download, o bloqueio de nova gravação durante a transferência e o fechamento normal da janela após clicar em Atualizar. Evidências em docs/QA.md.
 
 Instalador local em artifacts/installer/1.3.0. Recusou a instalação com mutex ativo. Próxima validação em desktop livre: executar tests/Installer-Smoke.ps1 com baseline 1.2.2 e instalador 1.3.0 para conferir a substituição efetiva dos arquivos. Release e tag aguardam pedido de publicação.
+
+## Melhoria de captura do cursor 1.3.1
+
+Captura via Desktop Duplication por adaptador e saída DXGI, com coordenadas relativas à tela selecionada, cursor incluído, 15 fps e H.264. Em telas rotacionadas, áreas entre monitores ou indisponibilidade do método no início do trecho, a captura usa gdigrab. As tentativas usam arquivos distintos. Uma falha após o início do trecho continua sujeita às regras de recuperação.
+
+Prova local com FFmpeg 9.0.2 do instalador: cursor visível em 70/70 quadros, com deslocamento de 88 pixels e período final parado. Outro ensaio mostrou seis quadros iniciais sem cursor enquanto ele estava parado, seguidos de 55 quadros com cursor. O monitor físico do outro PC ainda precisa de observação. Core 70 asserções, fluxo de atualização 34 verificações e exclusão por WDA em vídeo DXGI aprovados. Evidências em docs/QA.md.
+
+Próximo passo para o teste remoto: disponibilizar uma release estável mediante autorização e, no PC com 1.3.0, usar Verificar atualizações → Atualizar. Conferir a versão instalada e observar o ponteiro no monitor e no MP4.

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -16,6 +16,7 @@ internal static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        if (args.Contains("--cursor")) { CursorProof.Run(args); return; }
         if (args.Contains("--background")) { RunBackground(args); return; }
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
         var artifacts = Path.Combine(root, ".test-artifacts", "affinity-" + Guid.NewGuid().ToString("N"));
@@ -43,7 +44,7 @@ internal static class Program
                 var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(artifacts, "result.json"), json);
                 Console.WriteLine(json); Console.WriteLine("ARTIFACT " + artifacts);
-                Environment.ExitCode = before > 3000 ? 0 : 1;
+                Environment.ExitCode = before > 3000 && (!args.Contains("--dxgi") || result.ExclusionObserved && result.HiddenObserved) ? 0 : 1;
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); Environment.ExitCode = 1; }
             finally { application.Shutdown(); }
@@ -53,7 +54,20 @@ internal static class Program
         {
             var ffmpeg = Path.Combine(root, "components", "ffmpeg-master-latest-win64-gpl", "bin", "ffmpeg.exe");
             var info = new ProcessStartInfo(ffmpeg) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
-            foreach (var arg in new[] { "-hide_banner", "-nostdin", "-n", "-f", "gdigrab", "-framerate", "15", "-draw_mouse", "0", "-offset_x", (rect.Left + 40).ToString(), "-offset_y", (rect.Top + 40).ToString(), "-video_size", "64x64", "-i", "desktop", "-frames:v", "1", "-update", "1", Path.Combine(artifacts, file) }) info.ArgumentList.Add(arg);
+            if (args.Contains("--dxgi"))
+            {
+                var area = new EagleEyes.Core.CaptureArea(rect.Left + 40, rect.Top + 40, 64, 64);
+                using var session = new EagleEyes.Core.RecordingSession(ffmpeg, Path.Combine(Path.GetDirectoryName(ffmpeg)!, "ffprobe.exe"));
+                await session.StartAsync(area, artifacts);
+                await Task.Delay(350);
+                await session.PauseAsync();
+                if (!Directory.EnumerateFiles(session.RecoveryDirectory!, "*-dxgi.mp4").Any(p => new FileInfo(p).Length > 0))
+                    throw new IOException("Expected a Desktop Duplication segment");
+                var video = await session.StopAsync();
+                foreach (var arg in new[] { "-v", "error", "-nostdin", "-n", "-i", video, "-frames:v", "1", "-update", "1", Path.Combine(artifacts, file) })
+                    info.ArgumentList.Add(arg);
+            }
+            else foreach (var arg in new[] { "-hide_banner", "-nostdin", "-n", "-f", "gdigrab", "-framerate", "15", "-draw_mouse", "0", "-offset_x", (rect.Left + 40).ToString(), "-offset_y", (rect.Top + 40).ToString(), "-video_size", "64x64", "-i", "desktop", "-frames:v", "1", "-update", "1", Path.Combine(artifacts, file) }) info.ArgumentList.Add(arg);
             using var p = Process.Start(info)!; var err = p.StandardError.ReadToEndAsync(); await p.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
             if (p.ExitCode != 0) throw new Exception(await err);
         }

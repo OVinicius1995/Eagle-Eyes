@@ -3,6 +3,7 @@ using System.Text.Json;
 using EagleEyes.Core;
 
 // Internal fake capture process for the forced-shutdown test; never records pixels.
+if (args.Contains("-filter_complex")) { Environment.ExitCode = 1; return; }
 if (args.Contains("gdigrab")) { await Task.Delay(Timeout.Infinite); return; }
 
 var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));

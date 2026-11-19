@@ -181,3 +181,11 @@ Previews/UI: .test-artifacts/design-148776019fef4f6fa0201037b8f1b2a5, inspeciona
 - EagleEyes.DesignTests --live-update validou o botão durante captura real, pausa e finalização e salvou o MP4. Para seleção/contagem foi exercitado o bloqueio compartilhado da janela. Cancelar download preservou a janela, Gravar durante download foi bloqueado e Atualizar ocioso fechou normalmente com o instalador público verificado. A versão de origem foi simulada para que a release pública pudesse ser oferecida. Evidência: .test-artifacts/design-4798a7e5c46a430c8ecfe692abdb0358/result.json.
 - Core --live --faults passou em 70 asserções. Evidência: .test-artifacts/qa-a4f99327f3e4472a86df9ff82d3bd1b4.
 - Setup 1.3.0 recusou a instalação com mutex de aplicativo ativo, código 1 e nenhum executável instalado. Log: .test-artifacts/update-mutex-97cfb7a505ed444a930554179e9cb4c7/setup.log. A instância do usuário continuou aberta.
+
+## Captura do cursor 1.3.1
+
+- EagleEyes.AffinityProof --cursor grava com a sessão de produção e decodifica todos os quadros do MP4. Com o FFmpeg de desenvolvimento, houve cursor em 60/60 quadros. Com --engine-dir apontando para o FFmpeg 9.0.2 instalado, houve 70/70 e deslocamento de 88 pixels, seguido de repouso. Evidências: .test-artifacts/cursor-6fccc9379e9a45eba6134a4557dd031a e cursor-87f6bf0af7464e208027edcb533d9761.
+- Em um ensaio do motor instalado, faltou cursor nos seis primeiros quadros antes do movimento, seguido de 55 quadros consecutivos com cursor. O teste registra o primeiro quadro visível e verifica continuidade a partir dele. Evidência: .test-artifacts/cursor-667c1c14a6f24358bd103b149b6c1660. A percepção da piscada no monitor físico permanece para avaliação no equipamento do usuário.
+- EagleEyes.AffinityProof --transparent --dxgi verificou o MP4 com janela transparente: 4096 pixels magenta no controle, zero com exclusão e zero com janela oculta. Evidência: .test-artifacts/affinity-fc15967f60b747edab16391a53109224.
+- EagleEyes.Tests --live --faults: 70 asserções. EagleEyes.DesignTests --live-update: 34 verificações. Evidências: .test-artifacts/qa-748406296c4c449babe4be7fe0379b6d e .test-artifacts/design-5259c3b79770496db35441019004484e.
+- Não houve teste físico com dois adaptadores, monitor rotacionado ou DPI misto nesta etapa.
