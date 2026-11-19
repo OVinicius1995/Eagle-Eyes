@@ -185,3 +185,5 @@ Captura via Desktop Duplication por adaptador e saída DXGI, com coordenadas rel
 Prova local com FFmpeg 9.0.2 do instalador: cursor visível em 70/70 quadros, com deslocamento de 88 pixels e período final parado. Outro ensaio mostrou seis quadros iniciais sem cursor enquanto ele estava parado, seguidos de 55 quadros com cursor. O monitor físico do outro PC ainda precisa de observação. Core 70 asserções, fluxo de atualização 34 verificações e exclusão por WDA em vídeo DXGI aprovados. Evidências em docs/QA.md.
 
 Próximo passo para o teste remoto: disponibilizar uma release estável mediante autorização e, no PC com 1.3.0, usar Verificar atualizações → Atualizar. Conferir a versão instalada e observar o ponteiro no monitor e no MP4.
+
+Release v1.3.1 publicada como estável no GitHub. A API pública releases/latest retornou v1.3.1 e o serviço de atualização baixou e verificou o instalador. Próximo passo no outro PC com 1.3.0: atualizar pelo botão e observar o cursor na tela e no MP4.
