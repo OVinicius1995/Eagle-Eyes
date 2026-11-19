@@ -29,6 +29,7 @@ internal sealed class MainWindow : Window
     bool Testing => args.Contains("--smoke-test") || args.Contains("--proof-recording") || args.Contains("--ux-test");
     bool Vertical => settings.Edge is "Left" or "Right";
     UpdateRelease? pendingUpdate;
+    internal FileStream? VerifiedInstaller { get; private set; }
     bool Active => session?.State is RecordingState.Recording or RecordingState.Paused or RecordingState.Finalizing;
     IntPtr Handle => new WindowInteropHelper(this).Handle;
     internal MainWindow(string[] args)
@@ -53,7 +54,7 @@ internal sealed class MainWindow : Window
         timer.Tick += (_, _) =>
         {
             if (duration != null) duration.Text = DurationText();
-            if (session?.State == RecordingState.Faulted && !busy)
+            if (!busy && session?.State == RecordingState.Faulted)
             {
                 busy = true;
                 ReleaseFault(new IOException("O processo de captura foi encerrado inesperadamente."), "capture");
@@ -64,7 +65,7 @@ internal sealed class MainWindow : Window
         {
             if (pendingUpdate == null || !settings.CheckForUpdates || busy || Active || !IsVisible || OwnedWindows.Cast<Window>().Any(w => w.IsVisible)) return;
             var release = pendingUpdate; pendingUpdate = null;
-            UserMessages.UpdateAvailable(this, release);
+            OfferUpdate(this, release);
         };
         Loaded += async (_, _) =>
         {
@@ -77,6 +78,22 @@ internal sealed class MainWindow : Window
         WindowDragBehavior.Attach(this, SnapAfterDrag);
         MouseEnter += (_, _) => collapseTimer.Stop(); MouseLeave += (_, _) => { if (!settings.KeepExpanded) collapseTimer.Start(); };
     }
+    internal void OfferUpdate(Window owner, UpdateRelease release)
+    {
+        if (!IsLoaded || busy || session != null || closing) return;
+        busy = true;
+        try
+        {
+            var installer = UserMessages.UpdateAvailable(owner, release);
+            if (installer == null) return;
+            VerifiedInstaller = installer;
+            closing = true;
+            if (owner != this) owner.Close();
+            Close();
+        }
+        finally { busy = false; }
+    }
+
     internal void ShowControls()
     {
         // Selection and countdown own the current interaction; do not restore an idle bar over them.
@@ -175,7 +192,7 @@ internal sealed class MainWindow : Window
         animating = false; Save();
     }
     void Save() { if (Testing) return; try { settings.Save(); } catch (Exception ex) { AppLog.Write("save-position", ex); ToolTip = CaptureToolTip("Não foi possível lembrar a posição da barra. Tente novamente."); } }
-    void Configure() { if (busy || Active) { UserMessages.Show(this, "Salve ou descarte a gravação antes de alterar as configurações."); return; } collapseTimer.Stop(); new SettingsWindow(settings) { Owner = this }.ShowDialog(); Render(); }
+    void Configure() { if (busy || Active) { UserMessages.Show(this, "Salve ou descarte a gravação antes de alterar as configurações."); return; } collapseTimer.Stop(); new SettingsWindow(settings) { Owner = this }.ShowDialog(); if (!closing) Render(); }
     bool TryExcludeControls()
     {
         if (Testing && args.Contains("--disable-capture-exclusion")) return false;

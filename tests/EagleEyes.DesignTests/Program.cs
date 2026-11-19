@@ -33,7 +33,7 @@ internal static class Program
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var stream = File.Create(path); encoder.Save(stream);
     }
     [STAThread]
-    static int Main()
+    static int Main(string[] args)
     {
         string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
         string artifacts = Path.Combine(root, ".test-artifacts", "design-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(artifacts);
@@ -100,7 +100,7 @@ internal static class Program
             saved.Invoke(null, [owner, Path.Combine(artifacts, "Evidencia-de-teste.mp4"), null]);
             if (failure != null) throw failure;
             var releaseType = assembly.GetType("EagleEyes.App.UpdateRelease", true)!;
-            var release = Activator.CreateInstance(releaseType, [new Version(1, 3, 0), new Uri("https://github.com/OVinicius1995/Eagle-Eyes/releases/tag/v1.3.0")]);
+            var release = Activator.CreateInstance(releaseType, [new Version(1, 3, 0), new Uri("https://github.com/OVinicius1995/Eagle-Eyes/releases/download/v1.3.0/EagleEyes-1.3.0-win-x64-Setup.exe"), 3L, new string('a', 64)]);
             var notice = assembly.GetType("EagleEyes.App.UserMessages", true)!.GetMethod("UpdateAvailable", BindingFlags.NonPublic | BindingFlags.Static)!;
             var noticeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
             noticeTimer.Tick += (_, _) =>
@@ -110,7 +110,7 @@ internal static class Program
                 {
                     dialog = app.Windows.Cast<Window>().Single(w => w.Title == "Nova versão disponível" && w.IsVisible);
                     var later = Descendants<Button>((DependencyObject)dialog.Content).Single(b => b.Content as string == "Agora não");
-                    var open = Descendants<Button>((DependencyObject)dialog.Content).Single(b => b.Content as string == "Abrir versão");
+                    var open = Descendants<Button>((DependencyObject)dialog.Content).Single(b => b.Content as string == "Atualizar");
                     Assert(later.IsCancel, "Update notice supports dismissal");
                     Assert(ReferenceEquals(open.Style, dialog.Resources["EagleEyes.Button.Primary"]), "Update action follows shared identity");
                     SavePreview(dialog, Path.Combine(artifacts, "update-notice.png"));
@@ -121,6 +121,102 @@ internal static class Program
             };
             noticeTimer.Start(); notice.Invoke(null, [owner, release]);
             if (failure != null) throw failure;
+            if (args.Contains("--live-update"))
+            {
+                var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                var mainType = assembly.GetType("EagleEyes.App.MainWindow", true)!;
+                var main = (Window)Activator.CreateInstance(mainType, flags, null, [new[] { "--ux-test" }], null)!;
+                bool closed = false;
+                main.Closed += (_, _) => closed = true;
+                main.Show();
+                var offer = mainType.GetMethod("OfferUpdate", flags)!;
+                var sessionField = mainType.GetField("session", flags)!;
+                var busy = mainType.GetField("busy", flags)!;
+                void CheckBlocked(string state)
+                {
+                    // Close unexpected dialogs to make a guard regression fail instead of hanging the suite.
+                    bool prompted = false;
+                    main.Dispatcher.BeginInvoke(() =>
+                    {
+                        var unexpected = app.Windows.Cast<Window>().SingleOrDefault(w => w.Title == "Nova versão disponível" && w.IsVisible);
+                        if (unexpected != null) { prompted = true; unexpected.Close(); }
+                    });
+                    offer.Invoke(main, [main, release]);
+                    Assert(main.IsLoaded && !prompted && mainType.GetProperty("VerifiedInstaller", flags)!.GetValue(main) == null,
+                        "Update blocked during " + state);
+                }
+                busy.SetValue(main, true);
+                CheckBlocked("selection or countdown");
+                busy.SetValue(main, false);
+                string bin = Path.Combine(root, "components", "ffmpeg-master-latest-win64-gpl", "bin");
+                using var capture = new EagleEyes.Core.RecordingSession(Path.Combine(bin, "ffmpeg.exe"), Path.Combine(bin, "ffprobe.exe"));
+                sessionField.SetValue(main, capture);
+                // The Core is asynchronous. Pump the dispatcher while recording operations settle.
+                void Wait(Task task)
+                {
+                    var frame = new DispatcherFrame();
+                    _ = task.ContinueWith(_ => main.Dispatcher.BeginInvoke(() => frame.Continue = false));
+                    Dispatcher.PushFrame(frame);
+                    task.GetAwaiter().GetResult();
+                }
+                Wait(capture.StartAsync(new EagleEyes.Core.CaptureArea(0, 0, 160, 120), artifacts));
+                CheckBlocked("recording");
+                Wait(Task.Delay(1200));
+                busy.SetValue(main, true);
+                Wait(capture.PauseAsync());
+                busy.SetValue(main, false);
+                CheckBlocked("pause");
+                busy.SetValue(main, true);
+                Wait(capture.ResumeAsync());
+                busy.SetValue(main, false);
+                Wait(Task.Delay(1200));
+                var saving = capture.StopAsync();
+                CheckBlocked("finalization");
+                Wait(saving);
+                Assert(File.Exists(saving.Result), "Recording survives all update attempts");
+                sessionField.SetValue(main, null);
+                // Exercise the idle button with the current public asset without installing over the user's app.
+                var service = assembly.GetType("EagleEyes.App.UpdateService", true)!;
+                var query = (Task)service.GetMethod("CheckAsync", BindingFlags.NonPublic | BindingFlags.Static)!
+                    .Invoke(null, [new Version(0, 0, 0), CancellationToken.None])!;
+                Wait(query);
+                var published = query.GetType().GetProperty("Result")!.GetValue(query);
+                var cancelDownload = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+                cancelDownload.Tick += (_, _) =>
+                {
+                    cancelDownload.Stop();
+                    var dialog = app.Windows.Cast<Window>().Single(w => w.Title == "Nova versão disponível" && w.IsVisible);
+                    var buttons = Descendants<Button>((DependencyObject)dialog.Content).ToArray();
+                    buttons.Single(b => Equals(b.Content, "Atualizar")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    var start = (Task)mainType.GetMethod("Start", flags)!.Invoke(main, null)!;
+                    Assert(start.IsCompletedSuccessfully && sessionField.GetValue(main) == null, "Recording start blocked during download");
+                    buttons.Single(b => Equals(b.Content, "Cancelar")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                cancelDownload.Start();
+                offer.Invoke(main, [main, published]);
+                Assert(!closed && !(bool)busy.GetValue(main)! && mainType.GetProperty("VerifiedInstaller", flags)!.GetValue(main) == null,
+                    "Cancelling actual download keeps recorder available");
+                var click = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+                click.Tick += (_, _) =>
+                {
+                    click.Stop();
+                    var dialog = app.Windows.Cast<Window>().Single(w => w.Title == "Nova versão disponível" && w.IsVisible);
+                    Descendants<Button>((DependencyObject)dialog.Content).Single(b => Equals(b.Content, "Atualizar")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                var deadline = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
+                deadline.Tick += (_, _) =>
+                {
+                    deadline.Stop();
+                    app.Windows.Cast<Window>().SingleOrDefault(w => w.Title == "Nova versão disponível")?.Close();
+                };
+                click.Start();
+                deadline.Start();
+                offer.Invoke(main, [main, published]);
+                deadline.Stop();
+                using var installer = (FileStream?)mainType.GetProperty("VerifiedInstaller", flags)!.GetValue(main);
+                Assert(closed && installer != null && File.Exists(installer.Name),
+                    "Idle update click verifies real installer and closes main window normally");
+            }
             Assert(checks.Count >= 19, "Dialog rendering checks completed");
             var guidePath = Path.Combine(root, "docs", "IDENTIDADE-VISUAL.md");
             if (File.Exists(guidePath))

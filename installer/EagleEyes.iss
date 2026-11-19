@@ -18,6 +18,7 @@ OutputBaseFilename=EagleEyes-{#AppVersion}-win-x64-Setup
 SetupIconFile=..\Assets\eagle-eyes.ico
 UninstallDisplayIcon={app}\Assets\eagle-eyes.ico
 AppMutex=Local\EagleEyes.Desktop
+SetupMutex=Local\EagleEyes.Installing
 CloseApplications=no
 RestartApplications=no
 Compression=lzma2
@@ -37,7 +38,7 @@ Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 Name: "{group}\Eagle Eyes"; Filename: "{app}\EagleEyes.App.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\eagle-eyes.ico"
 Name: "{autodesktop}\Eagle Eyes"; Filename: "{app}\EagleEyes.App.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\eagle-eyes.ico"; Tasks: desktopicon
 [Run]
-Filename: "{app}\EagleEyes.App.exe"; Description: "Abrir Eagle Eyes"; Flags: postinstall nowait skipifsilent unchecked
+Filename: "{app}\EagleEyes.App.exe"; Parameters: "--after-install"; Description: "Abrir Eagle Eyes"; Flags: postinstall nowait skipifsilent unchecked
 [Code]
 function InitializeUninstall(): Boolean;
 begin

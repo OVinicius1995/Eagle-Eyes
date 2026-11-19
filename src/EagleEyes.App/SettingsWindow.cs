@@ -85,7 +85,7 @@ internal sealed class SettingsWindow : Window
                 var release = await UpdateService.CheckAsync(UpdateService.CurrentVersion);
                 if (!IsLoaded) return;
                 updateStatus.Text = release == null ? "Nenhuma versão mais recente foi encontrada." : $"A versão {release.Version.ToString(3)} está disponível.";
-                if (release != null) UserMessages.UpdateAvailable(this, release);
+                if (release != null && Owner is MainWindow main) main.OfferUpdate(this, release);
             }
             catch (Exception error) { AppLog.Write("update-check", error); if (IsLoaded) updateStatus.Text = "Não conseguimos verificar agora. Confira sua conexão e tente novamente."; }
             finally { if (IsLoaded) checkUpdate.IsEnabled = true; }

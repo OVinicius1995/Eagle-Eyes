@@ -6,25 +6,30 @@ if(Test-Path $key){throw 'Já existe instalação Eagle Eyes registrada. Teste a
 if(Test-Path (Join-Path ([Environment]::GetFolderPath('Programs')) 'Eagle Eyes\Eagle Eyes.lnk')){throw 'Atalho anterior encontrado; teste abortado para preservá-lo.'}
 if(Get-Process EagleEyes.App -ErrorAction SilentlyContinue){throw 'Feche o Eagle Eyes antes do teste isolado.'}
 $id=[guid]::NewGuid().ToString('N'); $work=Join-Path $repo ".test-artifacts\installer-$id"; $app=Join-Path ([IO.Path]::GetTempPath()) "Eagle-Eyes-QA-$id"; New-Item -ItemType Directory -Force $work | Out-Null
+function SetupVersion([string]$file) {
+    if ([IO.Path]::GetFileName($file) -notmatch '^EagleEyes-(\d+\.\d+\.\d+)-win-x64-Setup\.exe$') { throw "Nome de instalador inesperado: $file" }
+    return $Matches[1]
+}
+$version=SetupVersion $Installer
 $checks=[Collections.Generic.List[string]]::new()
 function Assert($condition,[string]$message){if(!$condition){throw $message}; $checks.Add($message); Write-Host "PASS $message"}
 function RunSetup([string]$file){$p=Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/GROUP="EagleEyes-Test-'+$id+'"'),('/LOG="'+$work+'\setup-'+[guid]::NewGuid().ToString('N')+'.log"')) -Wait -PassThru -WindowStyle Hidden; Assert ($p.ExitCode -eq 0) 'Setup exits successfully'}
 $prefs=Join-Path $env:LOCALAPPDATA 'EagleEyes\settings.json'; $before=if(Test-Path $prefs){(Get-FileHash $prefs).Hash}else{''}
 $failure=$null
 try {
-    if($BaselineInstaller){RunSetup $BaselineInstaller; Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.1.0') 'Baseline 1.2.1 installed'}
+    if($BaselineInstaller){RunSetup $BaselineInstaller; Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq ((SetupVersion $BaselineInstaller)+'.0')) 'Baseline version installed'}
     if(!(Test-Path $app)){New-Item -ItemType Directory -Force $app | Out-Null}
     New-Item -ItemType Directory -Force "$app\ffmpeg" | Out-Null
     'external component sentinel' | Set-Content "$app\ffmpeg\user-component.txt"
     'user video sentinel' | Set-Content "$app\prior-video.mp4"
     RunSetup $Installer
-    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq '1.2.2.0') 'Installed 1.2.2 executable'
+    Assert ((Get-Item "$app\EagleEyes.App.exe").VersionInfo.FileVersion -eq ($version+'.0')) 'Requested version installed'
     Assert (Test-Path "$app\coreclr.dll") 'Self-contained runtime present'
     Assert (Test-Path "$app\Assets\eagle-eyes.ico") 'Official icon installed'
     Assert (!(Test-Path "$app\docs\IDENTIDADE-VISUAL.md")) 'Private guide absent'
     Assert (Test-Path "$app\ffmpeg\user-component.txt") 'External component preserved on upgrade'
     Assert (Test-Path "$app\prior-video.mp4") 'Existing user video preserved on upgrade'
-    Assert ((Get-ItemProperty $key).DisplayVersion -eq '1.2.2') 'Per-user uninstall registration updated'
+    Assert ((Get-ItemProperty $key).DisplayVersion -eq $version) 'Per-user uninstall registration updated'
     $link=Join-Path ([Environment]::GetFolderPath('Programs')) "Eagle Eyes\Eagle Eyes.lnk"
     Assert (Test-Path $link) 'Start menu shortcut created'
     $shortcut=(New-Object -ComObject WScript.Shell).CreateShortcut($link)

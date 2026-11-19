@@ -59,4 +59,4 @@ Os testes de UI exigem aplicativo fechado e restauram preferências quando as al
 
 ## Instalador e aviso de versões
 
-Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador local inclui o runtime .NET, cria atalhos e preserva dados. A partir da versão 1.2.1, o assistente baixa e instala o FFmpeg automaticamente. A conexão é necessária durante a instalação. Configurações permite verificar novas releases estáveis e receber avisos; a aplicação da atualização é feita pelo usuário com o instalador. Esta versão ainda não foi publicada.
+Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador local inclui o runtime .NET, cria atalhos e preserva dados. A partir da versão 1.2.1, o assistente baixa e instala o FFmpeg automaticamente. A conexão é necessária durante a instalação. Na 1.3.0, o botão Atualizar baixa e verifica o instalador e fecha o aplicativo com segurança para iniciar a instalação. O aviso aguarda o término da gravação. Esta versão ainda não foi publicada.

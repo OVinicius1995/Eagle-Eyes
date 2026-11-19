@@ -38,18 +38,57 @@ internal static class UserMessages
         window.ShowDialog();
     }
 
-    internal static void UpdateAvailable(Window owner, UpdateRelease release)
+    internal static FileStream? UpdateAvailable(Window owner, UpdateRelease release)
     {
-        var (window, _, actions) = Create(owner, "Nova versão disponível", $"O Eagle Eyes {release.Version.ToString(3)} está disponível. Abra a página oficial para baixar o instalador. Salve sua gravação e saia do Eagle Eyes antes de instalar.");
-        var later = Button("Agora não", window.Resources); later.IsCancel = true;
-        later.Click += (_, _) => window.DialogResult = false;
-        var open = Button("Abrir versão", window.Resources, true); open.IsDefault = true;
-        open.Click += (_, _) =>
+        var (window, panel, actions) = Create(owner, "Nova versão disponível", $"Atualizar o Eagle Eyes para {release.Version.ToString(3)}? Depois de conferir o download, o aplicativo fechará e iniciará a instalação.");
+        using var cancel = new CancellationTokenSource();
+        var later = Button("Agora não", window.Resources);
+        later.IsCancel = true;
+        later.Click += (_, _) => window.Close();
+        var install = Button("Atualizar", window.Resources, true);
+        install.IsDefault = true;
+        FileStream? installer = null;
+        bool downloading = false;
+        var status = (TextBlock)panel.Children[0];
+        window.Closing += (_, e) =>
         {
-            try { Process.Start(new ProcessStartInfo(release.Page.AbsoluteUri) { UseShellExecute = true }); window.DialogResult = true; }
-            catch (Exception error) { AppLog.Write("update-open", error); Show(window, "Não foi possível abrir o navegador. Tente novamente."); }
+            if (!downloading) return;
+            e.Cancel = true;
+            cancel.Cancel();
+            status.Text = "Cancelando download…";
         };
-        actions.Children.Add(later); actions.Children.Add(open); window.ShowDialog();
+        install.Click += async (_, _) =>
+        {
+            if (downloading) return;
+            downloading = true;
+            install.IsEnabled = false;
+            later.Content = "Cancelar";
+            status.Text = "Baixando e verificando o instalador…";
+            try
+            {
+                installer = await UpdateService.DownloadAsync(release, cancel.Token);
+                downloading = false;
+                window.DialogResult = !cancel.IsCancellationRequested;
+            }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+            {
+                downloading = false;
+                window.Close();
+            }
+            catch (Exception error)
+            {
+                AppLog.Write("update-download", error);
+                downloading = false;
+                install.IsEnabled = true;
+                later.Content = "Agora não";
+                status.Text = "O download não pôde ser concluído e verificado. Confira a conexão e clique em Atualizar para tentar novamente.";
+            }
+        };
+        actions.Children.Add(later);
+        actions.Children.Add(install);
+        if (window.ShowDialog() == true) return installer;
+        installer?.Dispose();
+        return null;
     }
     internal static bool ConfirmDiscard(Window owner)
     {

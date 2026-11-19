@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading;
 using System.Windows;
 namespace EagleEyes.App;
@@ -8,8 +8,41 @@ internal sealed class App : Application
     [STAThread]
     public static void Main(string[] args)
     {
+        using var installer = RunDesktop(args);
+        if (installer == null) return;
+        try
+        {
+            using var setup = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(installer.Name)
+            {
+                UseShellExecute = true,
+                Arguments = "/SILENT /NORESTART /NOCLOSEAPPLICATIONS"
+            });
+        }
+        catch (Exception error)
+        {
+            AppLog.Write("update-install", error);
+            MessageBox.Show("O Windows não conseguiu iniciar o instalador. Abra o Eagle Eyes e tente atualizar novamente.", "Eagle Eyes");
+        }
+    }
+
+    static FileStream? RunDesktop(string[] args)
+    {
+        if (args.Contains("--after-install"))
+        {
+            for (int i = 0; i < 150 && Mutex.TryOpenExisting(@"Local\EagleEyes.Installing", out var setupMutex); i++)
+            {
+                setupMutex.Dispose();
+                Thread.Sleep(100);
+            }
+        }
         using var mutex = new Mutex(true, "Local\\EagleEyes.Desktop", out var first);
-        if (!first) { MessageBox.Show("O Eagle Eyes já está aberto.", "Eagle Eyes"); return; }
+        if (!first) { MessageBox.Show("O Eagle Eyes já está aberto.", "Eagle Eyes"); return null; }
+        if (Mutex.TryOpenExisting(@"Local\EagleEyes.Installing", out var installing))
+        {
+            installing.Dispose();
+            MessageBox.Show("A instalação do Eagle Eyes está em andamento. Aguarde a conclusão.", "Eagle Eyes");
+            return null;
+        }
         var app = new App { ShutdownMode = ShutdownMode.OnMainWindowClose };
         app.DispatcherUnhandledException += (_, e) => { AppLog.Write("unhandled-ui", e.Exception); if(app.MainWindow is Window owner) UserMessages.Show(owner, "Não foi possível concluir esta ação. Tente novamente.", "Logs: " + AppLog.DirectoryPath); e.Handled = true; };
         Branding.Initialize();
@@ -32,5 +65,6 @@ internal sealed class App : Application
             }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
         app.Run(window);
+        return window.VerifiedInstaller;
     }
 }

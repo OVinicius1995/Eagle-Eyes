@@ -1,4 +1,4 @@
-﻿# QA do primeiro marco
+# QA do primeiro marco
 
 ## Executar
 
@@ -173,3 +173,11 @@ Build Release final sem erros/avisos, nove verificações básicas do Core e ger
 ## Instalador e verificador de versões1.2.0 (18/11/2026)
 Build Release zero erros/avisos, Core9checks, UpdateTests21 com rede real e DesignTests26. Prova de upgrade1.1→1.2 em .test-artifacts/installer-fc8ef04b3421490f86d2f6abf48f8426 (24checks); pacote final .test-artifacts/installer-29211ea294b0406daf74a2f71088b4f9 (22checks). Ambas verificaram execução, bandeja, versão/atalhos, bloqueio com mutex, remoção e preservação de sentinelas/preferences. Prova de mutex foi controlada pelo harness, sem capturar vídeo real. Baseline1.1 veio da publicação local anterior; não houve teste com dois instaladores baixados de releases públicas. Guia privado e FFmpeg ausentes, licenças do runtime presentes.
 Previews/UI: .test-artifacts/design-148776019fef4f6fa0201037b8f1b2a5, inspecionados. Ação Agora não testada por evento real; Abrir versão não acionou navegador no ensaio. Autoaviso durante sessão real, máquina sem SDK/runtime prévio, usuário Windows não administrador e outras escalas/monitores requerem validação adicional. Self-contained gerado e runtime coreclr presente/testado, sem afirmar teste em máquina limpa. Nenhuma nova prova de MP4/captura executada porque Core não mudou.
+
+## Atualizador integrado 1.3.0
+
+- Build Release com SDK 11.0.100, sem avisos. Inno Setup 6.7.4 gerou o instalador x64.
+- EagleEyes.UpdateTests --live passou em 31 verificações. Baixou a release pública 1.2.2, rejeitou conteúdo alterado, curto ou excedente e metadados inválidos.
+- EagleEyes.DesignTests --live-update validou o botão durante captura real, pausa e finalização e salvou o MP4. Para seleção/contagem foi exercitado o bloqueio compartilhado da janela. Cancelar download preservou a janela, Gravar durante download foi bloqueado e Atualizar ocioso fechou normalmente com o instalador público verificado. A versão de origem foi simulada para que a release pública pudesse ser oferecida. Evidência: .test-artifacts/design-4798a7e5c46a430c8ecfe692abdb0358/result.json.
+- Core --live --faults passou em 70 asserções. Evidência: .test-artifacts/qa-a4f99327f3e4472a86df9ff82d3bd1b4.
+- Setup 1.3.0 recusou a instalação com mutex de aplicativo ativo, código 1 e nenhum executável instalado. Log: .test-artifacts/update-mutex-97cfb7a505ed444a930554179e9cb4c7/setup.log. A instância do usuário continuou aberta.

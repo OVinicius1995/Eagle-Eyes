@@ -82,3 +82,5 @@ Etapa concluída localmente; ver último checkpoint ROADMAP. Instalador final co
 Desde 1.2.1, o instalador baixa o ZIP fixo GyanD, valida SHA256 e instala em engine. FFmpegLocation prioriza esse motor e mantém os caminhos portáteis. Validar gravação instalada fora dos ancestrais do repositório.
 
 Desde 1.2.2, StopAsync limpa os temporários conhecidos somente depois de validar e mover o MP4 para o nome final. Reutilizar a checagem de propriedade do descarte. Falhas antes da publicação preservam a sessão; limpeza parcial mantém o sucesso do vídeo e informa a pasta.
+
+Desde 1.3.0, Atualizar baixa o Setup x64 oficial, verifica tamanho e digest SHA-256 da API e inicia a instalação após fechamento normal da interface e liberação do mutex. Somente oferecer quando ocioso e sem sessão. O bloqueio de ações permanece ativo durante o download. Preservar AppMutex, SetupMutex e CloseApplications=no. A migração a partir da 1.2.2 usa o atualizador legado.

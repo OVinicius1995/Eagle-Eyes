@@ -1,4 +1,4 @@
-﻿# Eagle Eyes - roadmap
+# Eagle Eyes - roadmap
 
 ## Release 1.0.0 implementado
 - [x] Arquitetura separada entre WPF, sessão e FFmpeg; contratos e responsabilidades documentados antes da delegação.
@@ -169,3 +169,11 @@ O usuário confirmou que a 1.2.1 funciona no outro PC. No ambiente de teste, a a
 ## Validação da atualização 1.2.2 no outro PC
 
 O usuário confirmou que realizou o teste no outro PC e que o resultado foi satisfatório. Essa confirmação encerra a pendência de validação manual registrada no checkpoint anterior. As evidências dos testes automatizados permanecem na seção da versão 1.2.2.
+
+## Atualização integrada 1.3.0 — 19/11/2026
+
+Implementado o botão Atualizar nas configurações e no aviso automático. O download verifica nome, tamanho e SHA-256 do Setup oficial. A interface só fecha após validação, quando o aplicativo está ocioso. O instalador inicia com progresso visível depois que a aplicação libera seu mutex. A migração inicial da versão pública 1.2.2 ainda exige o instalador.
+
+Build Release aprovado. Verificador passou em 31 verificações, incluindo download real da release pública. A suíte Core passou em 70 asserções com captura e falhas. O teste WPF gravou, pausou, retomou e salvou enquanto o atualizador recusava as tentativas de instalação. Também confirmou o cancelamento durante download, o bloqueio de nova gravação durante a transferência e o fechamento normal da janela após clicar em Atualizar. Evidências em docs/QA.md.
+
+Instalador local em artifacts/installer/1.3.0. Recusou a instalação com mutex ativo. Próxima validação em desktop livre: executar tests/Installer-Smoke.ps1 com baseline 1.2.2 e instalador 1.3.0 para conferir a substituição efetiva dos arquivos. Release e tag aguardam pedido de publicação.
