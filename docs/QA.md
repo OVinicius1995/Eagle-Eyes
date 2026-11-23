@@ -193,3 +193,7 @@ Previews/UI: .test-artifacts/design-148776019fef4f6fa0201037b8f1b2a5, inspeciona
 ## Print e lápis de apresentação
 
 Automático: `dotnet run --project tests/EagleEyes.DesignTests -c Release -- --presentation` abriu a superfície de anotação, inseriu um traço azul e confirmou as dimensões do PNG e pixels da cor esperada no PNG e no MP4 decodificado. Evidência local: `.test-artifacts/design-641e447e98d74dd0b834fbe9a66fff48`. A interação física com a barra, o atalho, a expiração após desenho livre e DPI misto ainda requerem validação.
+
+## Fluxo interativo de print, edição e controle do lápis
+
+`tests/UI-Flow.ps1 -Scenario Presentation` passou em 23/11/2026. O clique na câmera ociosa gerou uma imagem na área de transferência e um único PNG após a expiração. Ctrl+Shift+S abriu uma segunda miniatura. O clique suspendeu a expiração e o traço azul desenhado com o mouse foi confirmado no PNG e no mesmo pixel da imagem da área de transferência. No monitor inteiro, os cliques desligaram e reativaram o lápis, pausaram, retomaram e finalizaram o MP4, que passou na decodificação. Evidência local em `.test-artifacts/ux11-ui-72ba9152058e4bd79976b395cfbe0059/flow.log`. DPI misto permanece em aberto.

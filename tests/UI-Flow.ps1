@@ -1,6 +1,6 @@
 ﻿param(
  [string]$Repository='C:\Users\ViniciusAbreudeOlive\source\repos\Eagle-Eyes',
- [ValidateSet('Functional','Exclusion','ExclusionControl','Drag','TooltipsControl','Tooltips','RepeatedActions','All')][string]$Scenario='All'
+ [ValidateSet('Functional','Exclusion','ExclusionControl','Drag','TooltipsControl','Tooltips','RepeatedActions','Presentation','All')][string]$Scenario='All'
 )
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes,System.Drawing,System.Windows.Forms
@@ -223,6 +223,45 @@ try{
    Start-Sleep -Milliseconds 300
    Assert (@(Get-ChildItem -LiteralPath $outputDirectory -Filter '*.mp4').Count-eq 1) 'Two save invokes publish exactly one MP4'
    Assert (@(Get-ChildItem -LiteralPath $outputDirectory -Directory -Filter '.eagle-eyes-session-*').Count-eq 1) 'Repeated commands never create another session'
+  }elseif($currentScenario-eq 'Presentation'){
+   Click-Button 'Tirar print (Ctrl+Shift+S)'
+   $null=Wait-Element -name 'Editar print' -kind Button
+   Start-Sleep -Seconds 4
+   Assert ([Windows.Forms.Clipboard]::ContainsImage()) 'Idle camera copies a pasteable bitmap'
+   Assert (@(Get-ChildItem $outputDirectory -Filter 'Print-*.png').Count -eq 1) 'Idle thumbnail expires and saves once'
+   Hotkey 0x53
+   $null=Wait-Element -name 'Editar print' -kind Button
+   Start-Sleep -Milliseconds 350
+   Click-Button 'Editar print'
+   Click-Button 'Azul'
+   Start-Sleep -Seconds 3
+   Assert (@(Get-ChildItem $outputDirectory -Filter 'Print-*.png').Count -eq 1) 'Editor cancels automatic save'
+   Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 120 20
+   Click-Button 'Salvar print'
+   Start-Sleep -Milliseconds 800
+   $files=@(Get-ChildItem $outputDirectory -Filter 'Print-*.png' | Sort-Object CreationTimeUtc)
+   Assert ($files.Count -eq 2) 'Edited print saves once'
+   $bitmap=[Drawing.Bitmap]::new($files[1].FullName)
+   $paste=[Windows.Forms.Clipboard]::GetImage()
+   try {
+    $found=$false
+    for($y=[int]($bitmap.Height/2)-15;$y -lt $bitmap.Height/2+75 -and !$found;$y++){
+     for($x=[int]($bitmap.Width/2);$x -lt $bitmap.Width/2+180;$x++){
+      $pixel=$bitmap.GetPixel($x,$y)
+      if($pixel.B -eq 255 -and $pixel.G -eq 191 -and $pixel.R -eq 0){$found=$paste.GetPixel($x,$y).ToArgb() -eq $pixel.ToArgb();if($found){break}}
+     }
+    }
+    Assert $found 'Edited blue stroke present in PNG and clipboard'
+   } finally {$paste.Dispose();$bitmap.Dispose()}
+   Select-Area $true;Click-Button 'Gravar';Observe-Countdown
+   Click-Button 'Ativar lápis'
+   Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 90 45
+   Click-Button 'Desativar lápis'
+   Click-Button 'Ativar lápis'
+   Click-Button 'Pausar gravação'
+   Click-Button 'Retomar gravação'
+   Click-Button 'Parar e salvar'
+   $output=Save-Recording $true
   }elseif($currentScenario-eq 'Drag'){
    $idle=Ancestor-Window (Wait-Element -name 'Gravar vídeo' -kind Button);$before=$idle.Current.BoundingRectangle
    Drag-Point ([int]($before.Right-22)) ([int]($before.Bottom-14)) -100 80

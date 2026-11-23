@@ -28,6 +28,8 @@ internal sealed class MainWindow : Window
     AnnotationWindow? annotations;
     Color penColor = Colors.OrangeRed;
     bool screenshotPending, screenshotHotkey;
+    PrintPreview? preview;
+    Task? printWorkflow;
     DateTime printNoticeUntil;
     string printNotice = "";
     string PrintTip => screenshotHotkey ? "Tirar print (Ctrl+Shift+S)" : "Tirar print (atalho indisponível)";
@@ -51,6 +53,15 @@ internal sealed class MainWindow : Window
             {
                 e.Cancel = true;
                 if (!busy && Active) await Discard();
+                return;
+            }
+            if (printWorkflow is { IsCompleted: false } pending)
+            {
+                e.Cancel = true;
+                closing = true;
+                preview?.FinishForExit();
+                await pending;
+                _ = Dispatcher.BeginInvoke(Close);
                 return;
             }
             Native.UnregisterHotKey(Handle, 1); Native.UnregisterHotKey(Handle, 2);
@@ -132,7 +143,8 @@ internal sealed class MainWindow : Window
 
     IntPtr Hook(IntPtr h, int msg, IntPtr w, IntPtr l, ref bool handled)
     {
-        if (msg == 0x312) { handled = true; if (w.ToInt32() == 1) _ = PauseResume(); else if (w.ToInt32() == 2) _ = Stop(); else if (w.ToInt32() == 3) _ = TakeScreenshot(); }
+        if (msg == 0x312) { handled = true; if (w.ToInt32() == 1) _ = PauseResume(); else if (w.ToInt32() == 2) _ = Stop(); else if (w.ToInt32() == 3) _ = TakeScreenshot(); else if (w.ToInt32() == 4 && annotations != null) { CloseAnnotations(); Render(); } }
+        if (msg == 0x47) annotations?.ExcludeToolbar(h); // WM_WINDOWPOSCHANGED
         if (msg == 0x2e0) Dispatcher.BeginInvoke(Dock);
         if (msg == 0x7e && !Active && !busy) Dispatcher.BeginInvoke(() => { var all = Native.Monitors(); if (all.Count > 0) { monitor = all.FirstOrDefault(m => m.Device == settings.MonitorDevice) ?? all[0]; settings.MonitorDevice = monitor.Device; Dock(); } });
         return IntPtr.Zero;
@@ -329,7 +341,17 @@ internal sealed class MainWindow : Window
         Native.ClampToWorkArea(this); sessionPositioned = true;
     }
 
-    async Task TakeScreenshot()
+    Task TakeScreenshot()
+    {
+        if (printWorkflow is { IsCompleted: false })
+        {
+            preview?.Activate();
+            return printWorkflow;
+        }
+        return printWorkflow = ProcessScreenshot();
+    }
+
+    async Task ProcessScreenshot()
     {
         if (busy || closing || screenshotPending || !IsEnabled || !IsVisible) return;
         var bounds = monitor.Bounds;
@@ -338,7 +360,21 @@ internal sealed class MainWindow : Window
         screenshotPending = true;
         try
         {
-            await Task.Run(() => Screenshot.Save(area, directory));
+            var image = await Task.Run(() => Screenshot.Capture(area));
+            var work = (Native.Monitors().FirstOrDefault(m => area.X >= m.Bounds.Left && area.X < m.Bounds.Right && area.Y >= m.Bounds.Top && area.Y < m.Bounds.Bottom) ?? monitor).Work;
+            preview = new PrintPreview(image, area, work) { Owner = this };
+            preview.Show();
+            if (closing) preview.FinishForExit();
+            bool copied = await CopyPrint(image);
+            var final = await preview.Result;
+            preview = null;
+            if (!ReferenceEquals(final, image) || !copied) copied = await CopyPrint(final);
+            await Task.Run(() => Screenshot.Save(final, directory));
+            if (!copied)
+            {
+                UserMessages.Show(this, "Print salvo na pasta de saída. A área de transferência do Windows está ocupada.");
+                return;
+            }
             if (session != null && !busy) { ShowPrintNotice("Print salvo"); }
         }
         catch (Exception ex)
@@ -347,7 +383,17 @@ internal sealed class MainWindow : Window
             if (session != null && !busy) { ShowPrintNotice("Falha ao salvar print"); }
             else if (IsVisible && !busy) UserMessages.Show(this, "Não foi possível salvar o print.", ex.Message);
         }
-        finally { screenshotPending = false; }
+        finally { preview = null; screenshotPending = false; }
+    }
+
+    static async Task<bool> CopyPrint(System.Windows.Media.Imaging.BitmapSource image)
+    {
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            try { Clipboard.SetImage(image); return true; }
+            catch (System.Runtime.InteropServices.ExternalException) { await Task.Delay(50); }
+        }
+        return false;
     }
 
     void ShowPrintNotice(string message)
@@ -373,14 +419,20 @@ internal sealed class MainWindow : Window
         {
             annotations = new AnnotationWindow(selectedArea, penColor);
             annotations.Show();
-            Native.SetWindowPos(Handle, new IntPtr(-1), 0, 0, 0, 0, 0x13);
+            // Windows keeps an owned toolbar above its drawing surface, including after moving or clicking.
+            Owner = annotations;
+            annotations.ExcludeToolbar(Handle);
+            Native.RegisterHotKey(Handle, 4, 0x4000, 0x1B);
         }
         Render();
     }
 
     void CloseAnnotations()
     {
-        annotations?.Close();
+        if (annotations == null) return;
+        Native.UnregisterHotKey(Handle, 4);
+        Owner = null;
+        annotations.Close();
         annotations = null;
     }
 

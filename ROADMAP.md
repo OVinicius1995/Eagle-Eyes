@@ -191,3 +191,9 @@ Release v1.3.1 publicada como estável no GitHub. A API pública releases/latest
 ## Prints e lápis de apresentação — etapa local
 
 Câmera na barra ociosa e de sessão, atalho global Ctrl+Shift+S, PNG na pasta de saída e lápis temporário em três cores. Build Release e prova de captura com 59 asserções aprovados. O teste de apresentação verificou os pixels do traço no PNG e no quadro decodificado do MP4. Próximo passo de QA: conferir acionamento por teclado e mouse, expiração dos traços e uso em monitores com DPI misto.
+
+## Prints e lápis — correção após uso real
+
+O print chega à área de transferência e encolhe até o canto inferior direito. A miniatura salva o original após três segundos ou abre a edição das marcações. A barra tem precedência sobre a superfície do lápis e seu retângulo é recortado da área de entrada dessa superfície. Esc também desativa o lápis quando o Windows disponibiliza o atalho.
+
+O cenário Presentation passou com cliques físicos na câmera ociosa, no editor e nos controles durante a gravação de monitor inteiro. Evidência em docs/QA.md. Próxima conferência de ambiente: repetir o fluxo em monitores com escalas diferentes.

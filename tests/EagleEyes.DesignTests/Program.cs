@@ -57,7 +57,8 @@ internal static class Program
                     overlay.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
                     Thread.Sleep(300);
                     var capture = assembly.GetType("EagleEyes.App.Screenshot", true)!.GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Static)!;
-                    capture.Invoke(null, [area, artifacts]);
+                    var shot = assembly.GetType("EagleEyes.App.Screenshot", true)!.GetMethod("Capture", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [area]);
+                    capture.Invoke(null, [shot, artifacts]);
                     var frame = BitmapFrame.Create(new Uri(Directory.GetFiles(artifacts, "Print-*.png").Single()));
                     Assert(frame.PixelWidth == area.Width && frame.PixelHeight == area.Height, "PNG matches selected region");
                     var pixels = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0);
