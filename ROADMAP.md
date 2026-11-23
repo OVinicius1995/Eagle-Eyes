@@ -198,6 +198,15 @@ O print chega à área de transferência e encolhe até o canto inferior direito
 
 O cenário Presentation passou com cliques físicos na câmera ociosa, no editor e nos controles durante a gravação de monitor inteiro. Evidência em docs/QA.md. Próxima conferência de ambiente: repetir o fluxo em monitores com escalas diferentes.
 
+## Checkpoint de retomada — 23/11/2026
+
+A branch local é `feature/ux-1.1`. O commit `9185c30` introduziu os prints e o lápis. O commit `63f9549` corrigiu a cópia para a área de transferência e o bloqueio da barra, e acrescentou a miniatura e o editor. Essas mudanças estão no executável local `artifacts/eagle-eyes/EagleEyes.App.exe`. A última release pública registrada é a v1.3.1.
+
+- **Print.** Câmera ou Ctrl+Shift+S copia o monitor configurado quando o app está ocioso e a região selecionada durante a sessão. A miniatura encolhe até o canto inferior direito. Após três segundos, o PNG é salvo na pasta de saída. Clicar na miniatura suspende o prazo e abre o editor. Salvar print copia e salva a versão marcada.
+- **Lápis.** Durante a gravação, há três cores e cada traço dura três segundos após soltar o mouse. A superfície de desenho tem um recorte na posição da barra para permitir desligar o lápis, pausar, retomar e parar com o mouse.
+- **Validação.** O build Release passou sem avisos. O cenário interativo confirmou o salvamento automático, a edição e a presença do traço no mesmo pixel do PNG e da imagem copiada. Os cliques na barra funcionaram com o lápis ativo e o MP4 final foi decodificado. Os roteiros e as evidências estão em [docs/QA.md](docs/QA.md).
+- **Próximo passo.** Em um desktop com dois monitores em escalas diferentes, gravar o segundo monitor, ativar o lápis, mover a barra e usar pausa, retomada e parada. Conferir a posição da miniatura nesse monitor e o alinhamento das marcações no PNG, na imagem colada no Paint e no vídeo. Conferir também a expiração de um traço após soltar o mouse. Registrar as escalas e os resultados em docs/QA.md.
+
 ## Editor de print e paleta do lápis — 23/11/2026
 
 O editor usa o tema dos diálogos da aplicação. Salvar print é a ação principal. O lápis começa ligado ao abrir a edição, pode ser desligado e volta a desenhar ao escolher uma cor. O editor e a gravação compartilham as amostras de vermelho puro (#FF0000), amarelo e azul. A área de desenho termina antes da barra de comandos.
@@ -209,3 +218,7 @@ Build Release sem avisos, captura real com 59 asserções e cenário interativo 
 A câmera informa a área capturada e o atalho Ctrl+Shift+S quando disponível. Na gravação e no editor, a dica do lápis acompanha o estado da ferramenta e explica o segundo clique para sair do desenho. A dica de cada cor explica que escolhê-la liga o lápis. As dicas usam as cores do tema, o popup protegido e texto de ajuda acessível.
 
 Build Release sem avisos. No desktop, o teste com mouse confirmou a dica do lápis ligado no editor e a dica da câmera durante a gravação. Próxima validação de ambiente segue sendo a de monitores com DPI misto.
+
+## Release 1.4.0
+
+O usuário testou as mudanças locais e aprovou a publicação. A versão reúne prints, edição, lápis de apresentação e dicas contextuais. As verificações específicas de DPI misto seguem pendentes.
