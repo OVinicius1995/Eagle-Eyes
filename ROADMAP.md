@@ -203,3 +203,9 @@ O cenário Presentation passou com cliques físicos na câmera ociosa, no editor
 O editor usa o tema dos diálogos da aplicação. Salvar print é a ação principal. O lápis começa ligado ao abrir a edição, pode ser desligado e volta a desenhar ao escolher uma cor. O editor e a gravação compartilham as amostras de vermelho puro (#FF0000), amarelo e azul. A área de desenho termina antes da barra de comandos.
 
 Build Release sem avisos, captura real com 59 asserções e cenário interativo Presentation aprovados. O teste verificou Desfazer, arraste com lápis desligado e pixels vermelhos no PNG e na área de transferência. Executável local atualizado. Próxima conferência de ambiente continua sendo o alinhamento em dois monitores com escalas diferentes.
+
+## Dicas de print e lápis — 23/11/2026
+
+A câmera informa a área capturada e o atalho Ctrl+Shift+S quando disponível. Na gravação e no editor, a dica do lápis acompanha o estado da ferramenta e explica o segundo clique para sair do desenho. A dica de cada cor explica que escolhê-la liga o lápis. As dicas usam as cores do tema, o popup protegido e texto de ajuda acessível.
+
+Build Release sem avisos. No desktop, o teste com mouse confirmou a dica do lápis ligado no editor e a dica da câmera durante a gravação. Próxima validação de ambiente segue sendo a de monitores com DPI misto.
