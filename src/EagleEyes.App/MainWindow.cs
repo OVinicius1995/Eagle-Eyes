@@ -25,6 +25,12 @@ internal sealed class MainWindow : Window
     RecordingSession? session; bool busy, closing, hotkeys, animating; string transient = "";
     CaptureArea? selectedArea; bool sessionPositioned, captureExcluded;
     TextBlock? duration;
+    AnnotationWindow? annotations;
+    Color penColor = Colors.OrangeRed;
+    bool screenshotPending, screenshotHotkey;
+    DateTime printNoticeUntil;
+    string printNotice = "";
+    string PrintTip => screenshotHotkey ? "Tirar print (Ctrl+Shift+S)" : "Tirar print (atalho indisponível)";
     Native.Monitor monitor = null!;
     bool Testing => args.Contains("--smoke-test") || args.Contains("--proof-recording") || args.Contains("--ux-test");
     bool Vertical => settings.Edge is "Left" or "Right";
@@ -37,7 +43,7 @@ internal sealed class MainWindow : Window
         this.args = args; Title = "Eagle Eyes"; WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; AllowsTransparency = true; Background = Brushes.Transparent; ShowInTaskbar = false; Topmost = true; Content = canvas;
         var available = Native.Monitors(); if (available.Count == 0) throw new InvalidOperationException("Nenhum monitor disponível."); monitor = available.FirstOrDefault(m => m.Device == settings.MonitorDevice) ?? available[0]; settings.MonitorDevice = monitor.Device;
         if (settings.Edge is not ("Left" or "Right" or "Top" or "Bottom")) settings.Edge = "Right";
-        SourceInitialized += (_, _) => { var source = HwndSource.FromHwnd(Handle); source?.AddHook(Hook); hotkeys = Native.RegisterHotKey(Handle, 1, 0x4006, 0x50); hotkeys = Native.RegisterHotKey(Handle, 2, 0x4006, 0x46) && hotkeys; captureExcluded = TryExcludeControls(); };
+        SourceInitialized += (_, _) => { var source = HwndSource.FromHwnd(Handle); source?.AddHook(Hook); hotkeys = Native.RegisterHotKey(Handle, 1, 0x4006, 0x50); hotkeys = Native.RegisterHotKey(Handle, 2, 0x4006, 0x46) && hotkeys; screenshotHotkey = Native.RegisterHotKey(Handle, 3, 0x4006, 0x53); captureExcluded = TryExcludeControls(); };
         Loaded += async (_, _) => { Render(); Dock(); if (args.Contains("--smoke-test")) { await Task.Delay(800); await SmokeCycle(); closing = true; Close(); } else if (args.Contains("--proof-recording")) await RunProof(); };
         Closing += async (_, e) =>
         {
@@ -48,11 +54,16 @@ internal sealed class MainWindow : Window
                 return;
             }
             Native.UnregisterHotKey(Handle, 1); Native.UnregisterHotKey(Handle, 2);
-            timer.Stop(); collapseTimer.Stop(); session?.Dispose();
+            Native.UnregisterHotKey(Handle, 3); CloseAnnotations(); timer.Stop(); collapseTimer.Stop(); session?.Dispose();
             if (!Testing) Save();
         };
         timer.Tick += (_, _) =>
         {
+            if (printNotice.Length > 0 && DateTime.UtcNow >= printNoticeUntil)
+            {
+                printNotice = "";
+                if (session != null && !busy) Render();
+            }
             if (duration != null) duration.Text = DurationText();
             if (!busy && session?.State == RecordingState.Faulted)
             {
@@ -121,7 +132,7 @@ internal sealed class MainWindow : Window
 
     IntPtr Hook(IntPtr h, int msg, IntPtr w, IntPtr l, ref bool handled)
     {
-        if (msg == 0x312) { handled = true; if (w.ToInt32() == 1) _ = PauseResume(); else if (w.ToInt32() == 2) _ = Stop(); }
+        if (msg == 0x312) { handled = true; if (w.ToInt32() == 1) _ = PauseResume(); else if (w.ToInt32() == 2) _ = Stop(); else if (w.ToInt32() == 3) _ = TakeScreenshot(); }
         if (msg == 0x2e0) Dispatcher.BeginInvoke(Dock);
         if (msg == 0x7e && !Active && !busy) Dispatcher.BeginInvoke(() => { var all = Native.Monitors(); if (all.Count > 0) { monitor = all.FirstOrDefault(m => m.Device == settings.MonitorDevice) ?? all[0]; settings.MonitorDevice = monitor.Device; Dock(); } });
         return IntPtr.Zero;
@@ -141,7 +152,7 @@ internal sealed class MainWindow : Window
     void Render()
     {
         if (session != null) { RenderRecordingBar(); return; }
-        canvas.Children.Clear(); ToolTip = null; bool expanded = settings.Expanded; double length = 126; double width = Vertical ? (expanded ? 100 : 38) : (expanded ? length : 58), height = Vertical ? (expanded ? length : 58) : (expanded ? 100 : 38); Width = width; Height = height;
+        canvas.Children.Clear(); ToolTip = null; bool expanded = settings.Expanded; double length = 164; double width = Vertical ? (expanded ? 100 : 38) : (expanded ? length : 58), height = Vertical ? (expanded ? length : 58) : (expanded ? 100 : 38); Width = width; Height = height;
         Geometry silhouette;
         if (!expanded) silhouette = new RectangleGeometry(new Rect(0, 0, width, height), 16, 16);
         else
@@ -166,6 +177,7 @@ internal sealed class MainWindow : Window
         var drag = new Border { Width = Vertical ? 54 : 12, Height = Vertical ? 12 : 54, Background = Brushes.Transparent, Cursor = Cursors.SizeAll, ToolTip = CaptureToolTip("Arraste para mover e encaixar na borda"), Child = new Path { Data = Geometry.Parse(Vertical ? "M17,3 L35,3 M17,7 L35,7" : "M3,17 L3,35 M7,17 L7,35"), Stroke = ink, StrokeThickness = 1 } };
         body.Children.Add(drag);
         duration = null; body.Children.Add(IconButton("Gravar vídeo", FunctionalIcon.Video, () => _ = Start(), 42));
+        body.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 36));
         Dock();
     }
     void Dock()
@@ -267,14 +279,14 @@ internal sealed class MainWindow : Window
 
     void RenderRecordingBar()
     {
-        canvas.Children.Clear(); Width = 452; Height = 60;
+        canvas.Children.Clear(); Width = 580; Height = 60;
         canvas.Clip = new RectangleGeometry(new Rect(0, 0, Width, Height), 10, 10);
         canvas.Children.Add(new Path { Data = canvas.Clip, Fill = dark });
         var row = new StackPanel { Orientation = Orientation.Horizontal, Height = 60, Margin = new Thickness(12, 0, 12, 0) };
         canvas.Children.Add(row);
         var paused = session?.State == RecordingState.Paused;
         row.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = paused ? Brushes.Goldenrod : Brushes.OrangeRed, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 7, 0) });
-        var status = new TextBlock { Text = transient.Length > 0 ? transient : paused ? "Pausado" : "Gravando", Foreground = ink, FontSize = 12, Width = 154, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        var status = new TextBlock { Text = transient.Length > 0 ? transient : printNotice.Length > 0 ? printNotice : paused ? "Pausado" : "Gravando", Foreground = ink, FontSize = 12, Width = 154, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
         AutomationProperties.SetAutomationId(status, "RecordingStatus"); row.Children.Add(status);
         duration = new TextBlock { Text = DurationText(), Foreground = Brushes.White, FontFamily = new FontFamily("Consolas"), FontSize = 14, Width = 78, VerticalAlignment = VerticalAlignment.Center, ToolTip = CaptureToolTip("Tempo efetivamente gravado") };
         AutomationProperties.SetAutomationId(duration, "RecordingDuration"); row.Children.Add(duration);
@@ -282,6 +294,15 @@ internal sealed class MainWindow : Window
         Separator();
         var pause = IconButton(paused ? "Retomar gravação" : "Pausar gravação", paused ? FunctionalIcon.Play : FunctionalIcon.Pause, () => _ = PauseResume(), 36);
         pause.IsEnabled = !busy; row.Children.Add(pause);
+        row.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 32));
+        row.Children.Add(IconButton(annotations == null ? "Ativar lápis" : "Desativar lápis", FunctionalIcon.Pencil, ToggleAnnotations, 32));
+        foreach (var (name, color) in new[] { ("Vermelho", Colors.OrangeRed), ("Amarelo", Colors.Gold), ("Azul", Colors.DeepSkyBlue) })
+        {
+            var swatch = IconButton("Lápis " + name.ToLowerInvariant(), FunctionalIcon.Pencil, () => ChooseColor(color), 22);
+            swatch.Content = new Ellipse { Width = 13, Height = 13, Fill = new SolidColorBrush(color),
+                Stroke = annotations != null && color == penColor ? Brushes.White : null, StrokeThickness = 2 };
+            row.Children.Add(swatch);
+        }
         var save = IconButton("Parar e salvar", FunctionalIcon.Stop, () => _ = Stop(), 36);
         save.IsEnabled = !busy; row.Children.Add(save);
         Separator();
@@ -308,6 +329,61 @@ internal sealed class MainWindow : Window
         Native.ClampToWorkArea(this); sessionPositioned = true;
     }
 
+    async Task TakeScreenshot()
+    {
+        if (busy || closing || screenshotPending || !IsEnabled || !IsVisible) return;
+        var bounds = monitor.Bounds;
+        var area = selectedArea ?? new CaptureArea(bounds.Left, bounds.Top, bounds.Width, bounds.Height);
+        var directory = settings.OutputDirectory;
+        screenshotPending = true;
+        try
+        {
+            await Task.Run(() => Screenshot.Save(area, directory));
+            if (session != null && !busy) { ShowPrintNotice("Print salvo"); }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write("screenshot", ex);
+            if (session != null && !busy) { ShowPrintNotice("Falha ao salvar print"); }
+            else if (IsVisible && !busy) UserMessages.Show(this, "Não foi possível salvar o print.", ex.Message);
+        }
+        finally { screenshotPending = false; }
+    }
+
+    void ShowPrintNotice(string message)
+    {
+        printNotice = message;
+        printNoticeUntil = DateTime.UtcNow.AddSeconds(2);
+        Render();
+    }
+
+    void ChooseColor(Color color)
+    {
+        if (busy || selectedArea == null) return;
+        penColor = color;
+        if (annotations == null) ToggleAnnotations();
+        else { annotations.SetColor(color); Render(); }
+    }
+
+    void ToggleAnnotations()
+    {
+        if (busy || selectedArea == null) return;
+        if (annotations != null) CloseAnnotations();
+        else
+        {
+            annotations = new AnnotationWindow(selectedArea, penColor);
+            annotations.Show();
+            Native.SetWindowPos(Handle, new IntPtr(-1), 0, 0, 0, 0, 0x13);
+        }
+        Render();
+    }
+
+    void CloseAnnotations()
+    {
+        annotations?.Close();
+        annotations = null;
+    }
+
     async Task PauseResume()
     {
         if (busy || session?.State is not (RecordingState.Recording or RecordingState.Paused)) return;
@@ -329,7 +405,7 @@ internal sealed class MainWindow : Window
         {
             var output = await session.StopAsync();
             var remainingDirectory = session.RecoveryDirectory;
-            session.Dispose(); session = null; selectedArea = null; transient = "";
+            CloseAnnotations(); session.Dispose(); session = null; selectedArea = null; transient = "";
             Render();
             UserMessages.Saved(this, output, remainingDirectory);
         }
@@ -341,6 +417,7 @@ internal sealed class MainWindow : Window
     {
         if (busy || session?.State is not (RecordingState.Recording or RecordingState.Paused)) return;
         busy = true;
+        CloseAnnotations();
         bool wasRecording = session.State == RecordingState.Recording;
         try
         {
@@ -357,7 +434,7 @@ internal sealed class MainWindow : Window
             }
             transient = "Descartando…"; Render();
             var result = await session.DiscardAsync();
-            session.Dispose(); session = null; selectedArea = null;
+            CloseAnnotations(); session.Dispose(); session = null; selectedArea = null;
             if (!result.Complete)
             {
                 var details = string.Join(Environment.NewLine, result.RemainingPaths);
@@ -372,7 +449,7 @@ internal sealed class MainWindow : Window
     void ReleaseFault(Exception error, string operation)
     {
         var recovery = session?.RecoveryDirectory;
-        session?.Dispose(); session = null; selectedArea = null;
+        CloseAnnotations(); session?.Dispose(); session = null; selectedArea = null;
         AppLog.Write(operation, error, recovery);
         bool preserved = false;
         try { preserved = recovery != null && Directory.Exists(recovery) && Directory.EnumerateFiles(recovery, "*.mp4").Any(p => new FileInfo(p).Length > 0); } catch { }

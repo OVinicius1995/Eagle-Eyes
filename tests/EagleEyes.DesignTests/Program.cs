@@ -42,6 +42,51 @@ internal static class Program
         try
         {
             var assembly = Assembly.Load("EagleEyes.App");
+            if (args.Contains("--presentation"))
+            {
+                var area = new EagleEyes.Core.CaptureArea(100, 100, 240, 160);
+                var annotationType = assembly.GetType("EagleEyes.App.AnnotationWindow", true)!;
+                var overlay = (Window)Activator.CreateInstance(annotationType, BindingFlags.Instance | BindingFlags.NonPublic, null, [area, Colors.DeepSkyBlue], null)!;
+                overlay.Show();
+                try
+                {
+                    var surface = (InkCanvas)overlay.Content;
+                    var points = new System.Windows.Input.StylusPointCollection { new System.Windows.Input.StylusPoint(10, 20), new System.Windows.Input.StylusPoint(90, 20) };
+                    surface.Strokes.Add(new System.Windows.Ink.Stroke(points, surface.DefaultDrawingAttributes.Clone()));
+                    overlay.UpdateLayout();
+                    overlay.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                    Thread.Sleep(300);
+                    var capture = assembly.GetType("EagleEyes.App.Screenshot", true)!.GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Static)!;
+                    capture.Invoke(null, [area, artifacts]);
+                    var frame = BitmapFrame.Create(new Uri(Directory.GetFiles(artifacts, "Print-*.png").Single()));
+                    Assert(frame.PixelWidth == area.Width && frame.PixelHeight == area.Height, "PNG matches selected region");
+                    var pixels = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0);
+                    var data = new byte[area.Width * area.Height * 4];
+                    pixels.CopyPixels(data, area.Width * 4, 0);
+                    Assert(Enumerable.Range(0, data.Length / 4).Count(i => data[i*4] == 255 && data[i*4+1] == 191 && data[i*4+2] == 0) > 100, "PNG contains blue pencil stroke");
+                    var resolver = assembly.GetType("EagleEyes.App.FFmpegLocation", true)!.GetMethod("Resolve", BindingFlags.NonPublic | BindingFlags.Static)!;
+                    string Binary(string name) => (string)resolver.Invoke(null, [name, null])!;
+                    var ffmpeg = Binary("ffmpeg.exe");
+                    var video = Task.Run(async () =>
+                    {
+                        using var session = new EagleEyes.Core.RecordingSession(ffmpeg, Binary("ffprobe.exe"));
+                        await session.StartAsync(area, artifacts);
+                        await Task.Delay(1200);
+                        return await session.StopAsync();
+                    }).GetAwaiter().GetResult();
+                    var decoded = Path.Combine(artifacts, "frame.png");
+                    var decode = new System.Diagnostics.ProcessStartInfo(ffmpeg) { UseShellExecute = false, CreateNoWindow = true };
+                    foreach (var arg in new[] { "-loglevel", "error", "-i", video, "-frames:v", "1", decoded }) decode.ArgumentList.Add(arg);
+                    using var process = System.Diagnostics.Process.Start(decode)!;
+                    process.WaitForExit();
+                    Assert(process.ExitCode == 0, "Decoded recording");
+                    var videoFrame = new FormatConvertedBitmap(BitmapFrame.Create(new Uri(decoded)), PixelFormats.Bgra32, null, 0);
+                    videoFrame.CopyPixels(data, area.Width * 4, 0);
+                    Assert(Enumerable.Range(0, data.Length / 4).Count(i => data[i*4] > 220 && Math.Abs(data[i*4+1] - 191) < 20 && data[i*4+2] < 30) > 80, "MP4 contains blue pencil stroke");
+                    return 0;
+                }
+                finally { overlay.Close(); }
+            }
             var settingsType = assembly.GetType("EagleEyes.App.Settings", true)!;
             var windowType = assembly.GetType("EagleEyes.App.SettingsWindow", true)!;
             var model = Activator.CreateInstance(settingsType, true)!;

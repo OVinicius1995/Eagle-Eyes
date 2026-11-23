@@ -3,7 +3,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 namespace EagleEyes.App;
 
-internal enum FunctionalIcon { Settings, Close, Video, Pause, Play, Stop, ChevronRight, Folder }
+internal enum FunctionalIcon { Settings, Close, Video, Pause, Play, Stop, ChevronRight, Folder, Camera, Pencil }
 internal static class FunctionalIcons
 {
     static readonly Brush Ink = FrozenBrush();
@@ -19,6 +19,8 @@ internal static class FunctionalIcons
             FunctionalIcon.Pause => new GeometryGroup { Children = { new RectangleGeometry(new Rect(5, 3, 4, 18), 1.6, 1.6), new RectangleGeometry(new Rect(15, 3, 4, 18), 1.6, 1.6) } },
             FunctionalIcon.Play => RoundedTriangle(),
             FunctionalIcon.Stop => new RectangleGeometry(new Rect(4, 4, 16, 16), 2, 2),
+            FunctionalIcon.Camera => Stroke(Geometry.Parse("M2,7 L7,7 L9,4 L15,4 L17,7 L22,7 L22,20 L2,20 Z M16,13 A4,4 0 1 1 8,13 A4,4 0 1 1 16,13"), 1.8),
+            FunctionalIcon.Pencil => Stroke(Geometry.Parse("M3,21 L5,15 L17,3 L21,7 L9,19 Z M15,5 L19,9"), 1.8),
             FunctionalIcon.Video => Video(),
             FunctionalIcon.ChevronRight => Stroke(Geometry.Parse("M8,4 L16,12 L8,20"), 2.3),
             FunctionalIcon.Folder => Stroke(Geometry.Parse("M3,7 L3,5 Q3,3 5,3 L10,3 L13,6 L20,6 Q22,6 22,8 L22,19 Q22,21 20,21 L4,21 Q2,21 2,19 L2,9 Q2,7 4,7 L22,7"), 1.7),
@@ -82,4 +84,5 @@ internal static class FunctionalIcons
         return Stroke(outline, 1.8);
     }
 }
+
 

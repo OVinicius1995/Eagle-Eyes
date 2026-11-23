@@ -189,3 +189,7 @@ Previews/UI: .test-artifacts/design-148776019fef4f6fa0201037b8f1b2a5, inspeciona
 - EagleEyes.AffinityProof --transparent --dxgi verificou o MP4 com janela transparente: 4096 pixels magenta no controle, zero com exclusão e zero com janela oculta. Evidência: .test-artifacts/affinity-fc15967f60b747edab16391a53109224.
 - EagleEyes.Tests --live --faults: 70 asserções. EagleEyes.DesignTests --live-update: 34 verificações. Evidências: .test-artifacts/qa-748406296c4c449babe4be7fe0379b6d e .test-artifacts/design-5259c3b79770496db35441019004484e.
 - Não houve teste físico com dois adaptadores, monitor rotacionado ou DPI misto nesta etapa.
+
+## Print e lápis de apresentação
+
+Automático: `dotnet run --project tests/EagleEyes.DesignTests -c Release -- --presentation` abriu a superfície de anotação, inseriu um traço azul e confirmou as dimensões do PNG e pixels da cor esperada no PNG e no MP4 decodificado. Evidência local: `.test-artifacts/design-641e447e98d74dd0b834fbe9a66fff48`. A interação física com a barra, o atalho, a expiração após desenho livre e DPI misto ainda requerem validação.

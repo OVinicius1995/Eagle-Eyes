@@ -187,3 +187,7 @@ Prova local com FFmpeg 9.0.2 do instalador: cursor visível em 70/70 quadros, co
 Próximo passo para o teste remoto: disponibilizar uma release estável mediante autorização e, no PC com 1.3.0, usar Verificar atualizações → Atualizar. Conferir a versão instalada e observar o ponteiro no monitor e no MP4.
 
 Release v1.3.1 publicada como estável no GitHub. A API pública releases/latest retornou v1.3.1 e o serviço de atualização baixou e verificou o instalador. Próximo passo no outro PC com 1.3.0: atualizar pelo botão e observar o cursor na tela e no MP4.
+
+## Prints e lápis de apresentação — etapa local
+
+Câmera na barra ociosa e de sessão, atalho global Ctrl+Shift+S, PNG na pasta de saída e lápis temporário em três cores. Build Release e prova de captura com 59 asserções aprovados. O teste de apresentação verificou os pixels do traço no PNG e no quadro decodificado do MP4. Próximo passo de QA: conferir acionamento por teclado e mouse, expiração dos traços e uso em monitores com DPI misto.

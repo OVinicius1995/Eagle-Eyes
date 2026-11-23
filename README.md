@@ -60,3 +60,9 @@ Os testes de UI exigem aplicativo fechado e restauram preferências quando as al
 ## Instalador e aviso de versões
 
 Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador local inclui o runtime .NET, cria atalhos e preserva dados. A partir da versão 1.2.1, o assistente baixa e instala o FFmpeg automaticamente. A conexão é necessária durante a instalação. Na 1.3.0, o botão Atualizar baixa e verifica o instalador e fecha o aplicativo com segurança para iniciar a instalação. O aviso aguarda o término da gravação. Esta versão ainda não foi publicada.
+
+## Prints e marcações na versão local
+
+Clique na câmera ou pressione **Ctrl+Shift+S** para salvar um PNG na pasta de saída. Com a barra ociosa, o print abrange o monitor configurado. Durante a gravação ou pausa, ele usa a região da sessão.
+
+Na barra de gravação, clique no lápis ou em uma das três cores e arraste sobre a região para marcar. Cada traço desaparece três segundos depois que você solta o mouse. Clique novamente no lápis para apagar as marcas e voltar a interagir com o aplicativo que está sendo gravado.
