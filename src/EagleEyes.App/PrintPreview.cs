@@ -82,26 +82,61 @@ internal sealed class PrintPreview : Window
         if (editing) return;
         editing = true;
         StopPreview();
+        Resources = VisualIdentity.CreateResources();
         var layout = new DockPanel { Margin = new Thickness(10) };
         var tools = new WrapPanel();
         DockPanel.SetDock(tools, Dock.Top);
         layout.Children.Add(tools);
-        void Add(string label, Action action)
+        Button Add(object? content, string label, Action? action = null, bool primary = false, bool compact = false)
         {
-            var button = new Button { Content = label, Margin = new Thickness(3), Padding = new Thickness(8, 4, 8, 4) };
-            button.Click += (_, _) => action();
+            var button = new Button { Content = content, Margin = new Thickness(3),
+                Style = VisualIdentity.ButtonStyle(Resources, primary) };
+            if (compact)
+            {
+                button.MinWidth = 36;
+                button.Padding = new Thickness(6);
+                button.ToolTip = CaptureSafeToolTip.Create(label, true);
+            }
+            AutomationProperties.SetName(button, label);
+            if (action != null) button.Click += (_, _) => action();
             tools.Children.Add(button);
+            return button;
         }
+
         ink.Width = original.PixelWidth;
         ink.Height = original.PixelHeight;
         ink.Background = new ImageBrush(original) { Stretch = Stretch.Fill };
-        ink.DefaultDrawingAttributes = new DrawingAttributes { Color = Colors.OrangeRed, Width = 5, Height = 5, IgnorePressure = true };
-        Add("Vermelho", () => ink.DefaultDrawingAttributes.Color = Colors.OrangeRed);
-        Add("Amarelo", () => ink.DefaultDrawingAttributes.Color = Colors.Gold);
-        Add("Azul", () => ink.DefaultDrawingAttributes.Color = Colors.DeepSkyBlue);
-        Add("Desfazer", () => { if (ink.Strokes.Count > 0) ink.Strokes.RemoveAt(ink.Strokes.Count - 1); });
-        Add("Salvar print", FinishEdit);
-        Add("Salvar original", Close);
+        ink.DefaultDrawingAttributes = new DrawingAttributes { Color = PenPalette.Red, Width = 5, Height = 5, IgnorePressure = true };
+        ink.EditingModeInverted = InkCanvasEditingMode.None;
+        bool drawing = true;
+        var swatches = new Dictionary<Color, Button>();
+        var pencil = Add(FunctionalIcons.Create(FunctionalIcon.Pencil, 20), "Desativar lápis", compact: true);
+        pencil.Click += (_, _) => SetPen(!drawing, ink.DefaultDrawingAttributes.Color);
+
+        void SetPen(bool enabled, Color color)
+        {
+            drawing = enabled;
+            ink.EditingMode = enabled ? InkCanvasEditingMode.Ink : InkCanvasEditingMode.None;
+            ink.DefaultDrawingAttributes.Color = color;
+            string label = enabled ? "Desativar lápis" : "Ativar lápis";
+            AutomationProperties.SetName(pencil, label);
+            var tip = (ToolTip)pencil.ToolTip;
+            tip.Content = label;
+            AutomationProperties.SetName(tip, label);
+            pencil.BorderBrush = (Brush)Resources[enabled ? "EagleEyes.Focus" : "EagleEyes.Border.Control"];
+            foreach (var (shade, button) in swatches)
+                button.Content = PenPalette.Swatch(shade, enabled && shade == color);
+        }
+
+        foreach (var (name, color) in PenPalette.ColorsByName)
+            swatches[color] = Add(null, "Lápis " + name.ToLowerInvariant(), () => SetPen(true, color), compact: true);
+        SetPen(true, PenPalette.Red);
+        var undo = Add("Desfazer", "Desfazer", () => ink.Strokes.RemoveAt(ink.Strokes.Count - 1));
+        undo.IsEnabled = false;
+        ink.Strokes.StrokesChanged += (_, _) => undo.IsEnabled = ink.Strokes.Count > 0;
+        Add("Salvar original", "Salvar original", Close);
+        Add("Salvar print", "Salvar print", FinishEdit, primary: true);
+
         layout.Children.Add(new Viewbox { Stretch = Stretch.Uniform, Child = ink });
         Content = layout;
         int width = (int)(work.Width * .8), height = (int)(work.Height * .8);

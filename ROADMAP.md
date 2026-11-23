@@ -197,3 +197,9 @@ Câmera na barra ociosa e de sessão, atalho global Ctrl+Shift+S, PNG na pasta d
 O print chega à área de transferência e encolhe até o canto inferior direito. A miniatura salva o original após três segundos ou abre a edição das marcações. A barra tem precedência sobre a superfície do lápis e seu retângulo é recortado da área de entrada dessa superfície. Esc também desativa o lápis quando o Windows disponibiliza o atalho.
 
 O cenário Presentation passou com cliques físicos na câmera ociosa, no editor e nos controles durante a gravação de monitor inteiro. Evidência em docs/QA.md. Próxima conferência de ambiente: repetir o fluxo em monitores com escalas diferentes.
+
+## Editor de print e paleta do lápis — 23/11/2026
+
+O editor usa o tema dos diálogos da aplicação. Salvar print é a ação principal. O lápis começa ligado ao abrir a edição, pode ser desligado e volta a desenhar ao escolher uma cor. O editor e a gravação compartilham as amostras de vermelho puro (#FF0000), amarelo e azul. A área de desenho termina antes da barra de comandos.
+
+Build Release sem avisos, captura real com 59 asserções e cenário interativo Presentation aprovados. O teste verificou Desfazer, arraste com lápis desligado e pixels vermelhos no PNG e na área de transferência. Executável local atualizado. Próxima conferência de ambiente continua sendo o alinhamento em dois monitores com escalas diferentes.

@@ -197,3 +197,7 @@ Automático: `dotnet run --project tests/EagleEyes.DesignTests -c Release -- --p
 ## Fluxo interativo de print, edição e controle do lápis
 
 `tests/UI-Flow.ps1 -Scenario Presentation` passou em 23/11/2026. O clique na câmera ociosa gerou uma imagem na área de transferência e um único PNG após a expiração. Ctrl+Shift+S abriu uma segunda miniatura. O clique suspendeu a expiração e o traço azul desenhado com o mouse foi confirmado no PNG e no mesmo pixel da imagem da área de transferência. No monitor inteiro, os cliques desligaram e reativaram o lápis, pausaram, retomaram e finalizaram o MP4, que passou na decodificação. Evidência local em `.test-artifacts/ux11-ui-72ba9152058e4bd79976b395cfbe0059/flow.log`. DPI misto permanece em aberto.
+
+## Editor de print — 23/11/2026
+
+O cenário Presentation com cliques físicos passou em `.test-artifacts/ux11-ui-91d4d6b722f1447780e283e036bd300d/flow.log`. Arrastar com o lápis desligado manteve Desfazer desabilitado. Ligar, desenhar e desfazer removeu o traço. Selecionar vermelho com o lápis desligado reativou o desenho. O PNG salvo e a imagem copiada continham o mesmo pixel RGB (255, 0, 0). A barra da gravação aceitou pausa, retomada e parada. O MP4 tinha vídeo a 15 fps e nenhum fluxo de áudio. Compilações Debug e Release passaram sem avisos.

@@ -233,7 +233,16 @@ try{
    $null=Wait-Element -name 'Editar print' -kind Button
    Start-Sleep -Milliseconds 350
    Click-Button 'Editar print'
-   Click-Button 'Azul'
+   Click-Button 'Desativar lápis'
+   Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 100 10
+   $undo=Wait-Element -name 'Desfazer'
+   Assert (!$undo.Current.IsEnabled) 'Dragging with pencil off leaves the print untouched'
+   Click-Button 'Ativar lápis'
+   Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 90 15
+   Click-Button 'Desfazer'
+   Assert (!$undo.Current.IsEnabled) 'Undo remains accessible with pencil active'
+   Click-Button 'Desativar lápis'
+   Click-Button 'Lápis vermelho'
    Start-Sleep -Seconds 3
    Assert (@(Get-ChildItem $outputDirectory -Filter 'Print-*.png').Count -eq 1) 'Editor cancels automatic save'
    Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 120 20
@@ -248,10 +257,10 @@ try{
     for($y=[int]($bitmap.Height/2)-15;$y -lt $bitmap.Height/2+75 -and !$found;$y++){
      for($x=[int]($bitmap.Width/2);$x -lt $bitmap.Width/2+180;$x++){
       $pixel=$bitmap.GetPixel($x,$y)
-      if($pixel.B -eq 255 -and $pixel.G -eq 191 -and $pixel.R -eq 0){$found=$paste.GetPixel($x,$y).ToArgb() -eq $pixel.ToArgb();if($found){break}}
+      if($pixel.B -eq 0 -and $pixel.G -eq 0 -and $pixel.R -eq 255){$found=$paste.GetPixel($x,$y).ToArgb() -eq $pixel.ToArgb();if($found){break}}
      }
     }
-    Assert $found 'Edited blue stroke present in PNG and clipboard'
+    Assert $found 'Edited red stroke present in PNG and clipboard'
    } finally {$paste.Dispose();$bitmap.Dispose()}
    Select-Area $true;Click-Button 'Gravar';Observe-Countdown
    Click-Button 'Ativar lápis'

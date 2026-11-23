@@ -26,7 +26,7 @@ internal sealed class MainWindow : Window
     CaptureArea? selectedArea; bool sessionPositioned, captureExcluded;
     TextBlock? duration;
     AnnotationWindow? annotations;
-    Color penColor = Colors.OrangeRed;
+    Color penColor = PenPalette.Red;
     bool screenshotPending, screenshotHotkey;
     PrintPreview? preview;
     Task? printWorkflow;
@@ -308,11 +308,10 @@ internal sealed class MainWindow : Window
         pause.IsEnabled = !busy; row.Children.Add(pause);
         row.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 32));
         row.Children.Add(IconButton(annotations == null ? "Ativar lápis" : "Desativar lápis", FunctionalIcon.Pencil, ToggleAnnotations, 32));
-        foreach (var (name, color) in new[] { ("Vermelho", Colors.OrangeRed), ("Amarelo", Colors.Gold), ("Azul", Colors.DeepSkyBlue) })
+        foreach (var (name, color) in PenPalette.ColorsByName)
         {
             var swatch = IconButton("Lápis " + name.ToLowerInvariant(), FunctionalIcon.Pencil, () => ChooseColor(color), 22);
-            swatch.Content = new Ellipse { Width = 13, Height = 13, Fill = new SolidColorBrush(color),
-                Stroke = annotations != null && color == penColor ? Brushes.White : null, StrokeThickness = 2 };
+            swatch.Content = PenPalette.Swatch(color, annotations != null && color == penColor);
             row.Children.Add(swatch);
         }
         var save = IconButton("Parar e salvar", FunctionalIcon.Stop, () => _ = Stop(), 36);
