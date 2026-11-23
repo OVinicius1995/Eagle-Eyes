@@ -23,7 +23,12 @@ function Elements{
  $condition=[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ProcessIdProperty,$app.Id)
  $windows=[System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children,$condition)
  $result=[Collections.Generic.List[object]]::new()
- foreach($window in $windows){$result.Add($window);foreach($child in $window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)){$result.Add($child)}}
+ foreach($window in $windows){
+  try{$children=$window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)}
+  catch [System.Windows.Automation.ElementNotAvailableException]{continue}
+  $result.Add($window)
+  foreach($child in $children){$result.Add($child)}
+ }
  return $result.ToArray()
 }
 function Find-Element([string]$name='', [string]$id='', [string]$kind=''){
@@ -117,17 +122,24 @@ function Invoke-Twice($pattern,[string]$label){
 function White-Ratio([string]$path,[System.Drawing.Rectangle]$crop){
  $bitmap=[Drawing.Bitmap]::new($path);try{$count=0;$total=0;for($y=$crop.Top;$y-lt $crop.Bottom;$y+=2){for($x=$crop.Left;$x-lt $crop.Right;$x+=2){$pixel=$bitmap.GetPixel($x,$y);if($pixel.R-gt 210-and $pixel.G-gt 210-and $pixel.B-gt 210){$count++};$total++}};return $count/[double]$total}finally{$bitmap.Dispose()}
 }
-function Wait-VisibleTooltip{
+function Wait-VisibleTooltip([string]$expectedName='*'){
  $until=(Get-Date).AddSeconds(8)
  do{
   foreach($element in (Elements)){
-   if($element.Current.ControlType-eq [System.Windows.Automation.ControlType]::ToolTip-and !$element.Current.IsOffscreen){return $element}
+   if($element.Current.ControlType-eq [System.Windows.Automation.ControlType]::ToolTip-and !$element.Current.IsOffscreen -and $element.Current.Name -like $expectedName){return $element}
   }
   Start-Sleep -Milliseconds 100
  }while((Get-Date)-lt $until)
  throw 'No visible UIAutomation ToolTip after hover'
 }
 
+function Assert-Hint([string]$name,[string]$expected){
+ $button=Wait-Element -name $name -kind Button
+ $rect=$button.Current.BoundingRectangle
+ [EagleUiInput]::SetCursorPos([int]($rect.Left+$rect.Width/2),[int]($rect.Top+$rect.Height/2))|Out-Null
+ $tooltip=Wait-VisibleTooltip $expected
+ Assert ($tooltip.Current.Name -like $expected -and $button.Current.HelpText -eq $tooltip.Current.Name) ("Visible and accessible hint for "+$name)
+}
 function Sample-Tooltip([string]$label,$hoverTarget){
  [EagleUiInput]::SetCursorPos(($monitor.Left+100),($monitor.Top+$monitor.Height-150))|Out-Null;Start-Sleep -Milliseconds 800
  $target=$hoverTarget.Current.BoundingRectangle
@@ -233,6 +245,7 @@ try{
    $null=Wait-Element -name 'Editar print' -kind Button
    Start-Sleep -Milliseconds 350
    Click-Button 'Editar print'
+   Assert-Hint 'Desativar lápis' '*novamente para parar de desenhar*'
    Click-Button 'Desativar lápis'
    Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 100 10
    $undo=Wait-Element -name 'Desfazer'
@@ -263,6 +276,7 @@ try{
     Assert $found 'Edited red stroke present in PNG and clipboard'
    } finally {$paste.Dispose();$bitmap.Dispose()}
    Select-Area $true;Click-Button 'Gravar';Observe-Countdown
+   Assert-Hint 'Tirar print (Ctrl+Shift+S)' '*Ctrl+Shift+S*área da gravação*'
    Click-Button 'Ativar lápis'
    Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 90 45
    Click-Button 'Desativar lápis'

@@ -9,6 +9,18 @@ namespace EagleEyes.App;
 /// <summary>WPF tooltips have a separate popup HWND and do not inherit the owner's display affinity.</summary>
 internal static class CaptureSafeToolTip
 {
+    static readonly Lazy<Style> hintStyle = new(() =>
+        (Style)VisualIdentity.CreateResources()["EagleEyes.ToolTip.Hint"]);
+
+    internal static void SetHint(Button button, string text)
+    {
+        var tip = (ToolTip)button.ToolTip;
+        tip.Style = hintStyle.Value;
+        tip.Content = text;
+        AutomationProperties.SetName(tip, text);
+        AutomationProperties.SetHelpText(button, text);
+    }
+
     internal static ToolTip Create(string text, bool excludeFromCapture)
     {
         var tooltip = new ToolTip

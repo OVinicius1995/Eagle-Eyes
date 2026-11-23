@@ -33,6 +33,10 @@ internal sealed class MainWindow : Window
     DateTime printNoticeUntil;
     string printNotice = "";
     string PrintTip => screenshotHotkey ? "Tirar print (Ctrl+Shift+S)" : "Tirar print (atalho indisponível)";
+    string PrintHint(string target) => screenshotHotkey
+        ? $"Clique na câmera ou pressione Ctrl+Shift+S para tirar um print {target}."
+        : $"Clique na câmera para tirar um print {target}. O atalho está indisponível.";
+
     Native.Monitor monitor = null!;
     bool Testing => args.Contains("--smoke-test") || args.Contains("--proof-recording") || args.Contains("--ux-test");
     bool Vertical => settings.Edge is "Left" or "Right";
@@ -151,12 +155,13 @@ internal sealed class MainWindow : Window
     }
     ToolTip CaptureToolTip(string text) => CaptureSafeToolTip.Create(text, !(Testing && args.Contains("--disable-capture-exclusion")));
 
-    Button IconButton(string tip, FunctionalIcon icon, Action action, double size = 32)
+    Button IconButton(string tip, FunctionalIcon icon, Action action, double size = 32, string? hint = null)
     {
         var button = new Button { Width = size, Height = size, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = ink, Cursor = Cursors.Hand, ToolTip = CaptureToolTip(tip), Padding = new Thickness(6), Focusable = true };
         var border = new FrameworkElementFactory(typeof(Border)); border.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent }); border.SetValue(Border.CornerRadiusProperty, new CornerRadius(5)); var presenter = new FrameworkElementFactory(typeof(ContentPresenter)); presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center); presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center); border.AppendChild(presenter); var template = new ControlTemplate(typeof(Button)) { VisualTree = border };
         var hover = new Trigger { Property = IsMouseOverProperty, Value = true }; hover.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(45, 183, 185, 205)))); template.Triggers.Add(hover);
         var focus = new Trigger { Property = IsKeyboardFocusedProperty, Value = true }; focus.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromArgb(65, 183, 185, 205)))); template.Triggers.Add(focus); button.Template = template;
+        if (hint != null) CaptureSafeToolTip.SetHint(button, hint);
         double visualSize = icon == FunctionalIcon.Settings || (icon == FunctionalIcon.Close && size <= 28) ? 14 : icon == FunctionalIcon.Video ? 22 : icon == FunctionalIcon.ChevronRight ? 18 : 20;
         button.Content = FunctionalIcons.Create(icon, visualSize);
         AutomationProperties.SetName(button, tip); button.Click += (_, _) => action(); return button;
@@ -189,7 +194,7 @@ internal sealed class MainWindow : Window
         var drag = new Border { Width = Vertical ? 54 : 12, Height = Vertical ? 12 : 54, Background = Brushes.Transparent, Cursor = Cursors.SizeAll, ToolTip = CaptureToolTip("Arraste para mover e encaixar na borda"), Child = new Path { Data = Geometry.Parse(Vertical ? "M17,3 L35,3 M17,7 L35,7" : "M3,17 L3,35 M7,17 L7,35"), Stroke = ink, StrokeThickness = 1 } };
         body.Children.Add(drag);
         duration = null; body.Children.Add(IconButton("Gravar vídeo", FunctionalIcon.Video, () => _ = Start(), 42));
-        body.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 36));
+        body.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 36, PrintHint("do monitor selecionado")));
         Dock();
     }
     void Dock()
@@ -306,11 +311,11 @@ internal sealed class MainWindow : Window
         Separator();
         var pause = IconButton(paused ? "Retomar gravação" : "Pausar gravação", paused ? FunctionalIcon.Play : FunctionalIcon.Pause, () => _ = PauseResume(), 36);
         pause.IsEnabled = !busy; row.Children.Add(pause);
-        row.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 32));
-        row.Children.Add(IconButton(annotations == null ? "Ativar lápis" : "Desativar lápis", FunctionalIcon.Pencil, ToggleAnnotations, 32));
+        row.Children.Add(IconButton(PrintTip, FunctionalIcon.Camera, () => _ = TakeScreenshot(), 32, PrintHint("da área da gravação")));
+        row.Children.Add(IconButton(annotations == null ? "Ativar lápis" : "Desativar lápis", FunctionalIcon.Pencil, ToggleAnnotations, 32, PenPalette.PencilHint(annotations != null)));
         foreach (var (name, color) in PenPalette.ColorsByName)
         {
-            var swatch = IconButton("Lápis " + name.ToLowerInvariant(), FunctionalIcon.Pencil, () => ChooseColor(color), 22);
+            var swatch = IconButton("Lápis " + name.ToLowerInvariant(), FunctionalIcon.Pencil, () => ChooseColor(color), 22, PenPalette.ColorHint(name));
             swatch.Content = PenPalette.Swatch(color, annotations != null && color == penColor);
             row.Children.Add(swatch);
         }

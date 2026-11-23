@@ -201,3 +201,5 @@ Automático: `dotnet run --project tests/EagleEyes.DesignTests -c Release -- --p
 ## Editor de print — 23/11/2026
 
 O cenário Presentation com cliques físicos passou em `.test-artifacts/ux11-ui-91d4d6b722f1447780e283e036bd300d/flow.log`. Arrastar com o lápis desligado manteve Desfazer desabilitado. Ligar, desenhar e desfazer removeu o traço. Selecionar vermelho com o lápis desligado reativou o desenho. O PNG salvo e a imagem copiada continham o mesmo pixel RGB (255, 0, 0). A barra da gravação aceitou pausa, retomada e parada. O MP4 tinha vídeo a 15 fps e nenhum fluxo de áudio. Compilações Debug e Release passaram sem avisos.
+
+Em 23/11/2026, Presentation conferiu por hover o popup do lápis ligado no editor e o da câmera durante a gravação. O texto visível coincidiu com o texto de ajuda acessível do botão. O fluxo terminou com PNG e MP4. Evidência em `.test-artifacts/ux11-ui-6234d4f8c93f42f09935bf9203af3c4a/flow.log`.

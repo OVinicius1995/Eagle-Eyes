@@ -34,4 +34,16 @@
     <Setter Property="Background" Value="{StaticResource EagleEyes.Action.Primary}"/>
     <Setter Property="BorderBrush" Value="{StaticResource EagleEyes.Action.PrimaryBorder}"/>
   </Style>
+  <Style x:Key="EagleEyes.ToolTip.Hint" TargetType="ToolTip">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToolTip">
+          <Border Background="{StaticResource EagleEyes.Surface.Input}" BorderBrush="{StaticResource EagleEyes.Border.Control}"
+                  BorderThickness="1" CornerRadius="6" Padding="10,7" MaxWidth="295">
+            <TextBlock Text="{TemplateBinding Content}" Foreground="{StaticResource EagleEyes.Text.Primary}" TextWrapping="Wrap"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
 </ResourceDictionary>

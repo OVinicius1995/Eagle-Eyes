@@ -120,16 +120,18 @@ internal sealed class PrintPreview : Window
             ink.DefaultDrawingAttributes.Color = color;
             string label = enabled ? "Desativar lápis" : "Ativar lápis";
             AutomationProperties.SetName(pencil, label);
-            var tip = (ToolTip)pencil.ToolTip;
-            tip.Content = label;
-            AutomationProperties.SetName(tip, label);
+            CaptureSafeToolTip.SetHint(pencil, PenPalette.PencilHint(enabled));
             pencil.BorderBrush = (Brush)Resources[enabled ? "EagleEyes.Focus" : "EagleEyes.Border.Control"];
             foreach (var (shade, button) in swatches)
                 button.Content = PenPalette.Swatch(shade, enabled && shade == color);
         }
 
         foreach (var (name, color) in PenPalette.ColorsByName)
-            swatches[color] = Add(null, "Lápis " + name.ToLowerInvariant(), () => SetPen(true, color), compact: true);
+        {
+            var swatch = Add(null, "Lápis " + name.ToLowerInvariant(), () => SetPen(true, color), compact: true);
+            CaptureSafeToolTip.SetHint(swatch, PenPalette.ColorHint(name));
+            swatches[color] = swatch;
+        }
         SetPen(true, PenPalette.Red);
         var undo = Add("Desfazer", "Desfazer", () => ink.Strokes.RemoveAt(ink.Strokes.Count - 1));
         undo.IsEnabled = false;
