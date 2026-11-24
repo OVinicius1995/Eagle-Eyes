@@ -32,7 +32,7 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na área de trabalho"; Flags: unchecked
 [Files]
-Source: "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip"; DestName: "ffmpeg.zip"; DestDir: "{app}\engine"; Hash: "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"; ExternalSize: 114768076; Flags: external download extractarchive recursesubdirs ignoreversion
+Source: "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip"; DestName: "ffmpeg.zip"; DestDir: "{app}\engine"; Hash: "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"; ExternalSize: 114768076; Check: NeedsRecordingEngine; Flags: external download extractarchive recursesubdirs ignoreversion
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{group}\Eagle Eyes"; Filename: "{app}\EagleEyes.App.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\eagle-eyes.ico"
@@ -40,6 +40,33 @@ Name: "{autodesktop}\Eagle Eyes"; Filename: "{app}\EagleEyes.App.exe"; WorkingDi
 [Run]
 Filename: "{app}\EagleEyes.App.exe"; Parameters: "--after-install"; Description: "Abrir Eagle Eyes"; Flags: postinstall nowait skipifsilent unchecked
 [Code]
+var
+  CheckedEngineDir: String;
+  DownloadEngine: Boolean;
+
+function NeedsRecordingEngine(): Boolean;
+var
+  BinDir: String;
+begin
+  BinDir := ExpandConstant('{app}\engine\ffmpeg-9.0.2-essentials_build\bin');
+  if BinDir <> CheckedEngineDir then
+  begin
+    DownloadEngine := True;
+    try
+      if FileExists(BinDir + '\ffmpeg.exe') and FileExists(BinDir + '\ffprobe.exe') then
+        DownloadEngine :=
+          (CompareText(GetSHA256OfFile(BinDir + '\ffmpeg.exe'), '3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec') <> 0) or
+          (CompareText(GetSHA256OfFile(BinDir + '\ffprobe.exe'), 'f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52') <> 0);
+    except
+      Log('Eagle Eyes: erro ao verificar o motor: ' + GetExceptionMessage);
+    end;
+    CheckedEngineDir := BinDir;
+    if DownloadEngine then Log('Eagle Eyes: obtendo o motor de gravação.')
+    else Log('Eagle Eyes: reutilizando o motor de gravação verificado.');
+  end;
+  Result := DownloadEngine;
+end;
+
 function InitializeUninstall(): Boolean;
 begin
   Result := not CheckForMutexes('Local\EagleEyes.Desktop');

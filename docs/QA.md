@@ -205,3 +205,7 @@ O cenário Presentation com cliques físicos passou em `.test-artifacts/ux11-ui-
 Em 23/11/2026, Presentation conferiu por hover o popup do lápis ligado no editor e o da câmera durante a gravação. O texto visível coincidiu com o texto de ajuda acessível do botão. O fluxo terminou com PNG e MP4. Evidência em `.test-artifacts/ux11-ui-6234d4f8c93f42f09935bf9203af3c4a/flow.log`.
 
 Em 24/11/2026, Presentation descartou com o mouse um print marcado durante a gravação. O editor fechou, a pasta manteve a contagem de dois PNGs após quatro segundos e o texto copiado durante a edição permaneceu na área de transferência. Lápis, pausa, retomada e salvamento do MP4 funcionaram em seguida. Evidência em `.test-artifacts/ux11-ui-5406fe68a5264472a1182fafaf988f75/flow.log`.
+
+## Instalador 1.4.1 — 24/11/2026
+
+Installer-Smoke com -VerifyEngineReuse passou em 36 verificações. O log do upgrade 1.4.0 → 1.4.1 registrou a reutilização, sem download do ZIP. Em duas reinstalações isoladas, remover ffprobe.exe e corromper ffmpeg.exe acionaram o download e restauraram os hashes originais. O aplicativo instalado gravou um MP4 H.264 após duas pausas. Evidência em .test-artifacts/installer-c7b33066c436480b8d264382fb5f1b29/result.json.

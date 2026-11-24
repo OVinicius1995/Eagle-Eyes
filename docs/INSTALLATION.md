@@ -12,7 +12,7 @@ Saída: `artifacts/installer/1.3.0/EagleEyes-1.3.0-win-x64-Setup.exe` e `.sha256
 
 Instalação por usuário, sem exigir administrador, em `%LOCALAPPDATA%\Programs\Eagle Eyes`. Atalho no menu Iniciar, atalho na área de trabalho opcional, ícone oficial e entrada de desinstalação. AppId fixo identifica a mesma instalação nas próximas versões. Não escolher a pasta de uma cópia portátil existente: instalar em pasta própria.
 
-O assistente baixa o FFmpeg 9.0.2 diretamente da release do distribuidor, confere o SHA256 e instala o pacote em engine. Conecte-se à internet durante a instalação e as atualizações. Ao terminar, abra o Eagle Eyes e escolha a área de gravação. A gravação funciona offline.
+O instalador 1.4.1 verifica localmente o SHA-256 de ffmpeg.exe e ffprobe.exe do motor gerenciado na pasta engine. Se ambos correspondem ao pacote esperado, reutiliza o motor, inclusive em atualizações da versão 1.4.0. Quando falta um componente, ou a verificação falha, baixa o pacote FFmpeg 9.0.2 do distribuidor e confere o SHA-256 do ZIP antes de extraí-lo. Esse download requer internet. Ao terminar, abra o Eagle Eyes e escolha a área de gravação. A gravação funciona offline.
 
 ## Atualizar
 

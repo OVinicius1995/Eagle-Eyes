@@ -226,3 +226,7 @@ O usuário testou as mudanças locais e aprovou a publicação. A versão reúne
 ## Descarte de print — 24/11/2026
 
 O editor oferece Descartar print e retorna à barra sem publicar PNG ou substituir a área de transferência. Build Release e cenário Presentation passaram. Próximo passo para distribuição é validar a correção local e autorizar uma versão de manutenção.
+
+## Instalador local 1.4.1 — 24/11/2026
+
+O Setup verifica o SHA-256 do FFmpeg e do FFprobe instalados em engine antes de solicitar o ZIP. A atualização isolada de 1.4.0 para 1.4.1 reutilizou os binários. Dois ensaios de reparo baixaram e restauraram o motor, seguidos de gravação e desinstalação aprovadas. O instalador local inclui também o descarte de print. Próximo passo para distribuição é a validação do usuário e autorização para publicação.

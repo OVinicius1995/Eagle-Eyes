@@ -56,7 +56,7 @@ Os testes de UI exigem aplicativo fechado e restauram preferências quando as al
 
 ## Instalador e aviso de versões
 
-Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador inclui o runtime .NET, cria atalhos e preserva dados. A partir da versão 1.2.1, o assistente baixa e instala o FFmpeg automaticamente. A conexão é necessária durante a instalação. Na 1.3.0, o botão Atualizar baixa e verifica o instalador e fecha o aplicativo com segurança para iniciar a instalação. O aviso aguarda o término da gravação.
+Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador inclui o runtime .NET, cria atalhos e preserva dados. A partir da versão 1.2.1, o assistente baixa e instala o FFmpeg automaticamente. A partir do instalador 1.4.1, atualizações reutilizam o motor instalado quando os dois executáveis passam na verificação de integridade. A conexão é necessária para obter o instalador e para instalar ou reparar o motor. Na 1.3.0, o botão Atualizar baixa e verifica o instalador e fecha o aplicativo com segurança para iniciar a instalação. O aviso aguarda o término da gravação.
 
 ## Prints e marcações
 

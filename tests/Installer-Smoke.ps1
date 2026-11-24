@@ -1,4 +1,4 @@
-﻿param([Parameter(Mandatory=$true)][string]$Installer, [string]$BaselineInstaller)
+﻿param([Parameter(Mandatory=$true)][string]$Installer, [string]$BaselineInstaller, [switch]$VerifyEngineReuse)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $key='HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{A15849CE-44AD-4A1C-AF1F-E97B35A4E377}_is1'
@@ -13,7 +13,7 @@ function SetupVersion([string]$file) {
 $version=SetupVersion $Installer
 $checks=[Collections.Generic.List[string]]::new()
 function Assert($condition,[string]$message){if(!$condition){throw $message}; $checks.Add($message); Write-Host "PASS $message"}
-function RunSetup([string]$file){$p=Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/GROUP="EagleEyes-Test-'+$id+'"'),('/LOG="'+$work+'\setup-'+[guid]::NewGuid().ToString('N')+'.log"')) -Wait -PassThru -WindowStyle Hidden; Assert ($p.ExitCode -eq 0) 'Setup exits successfully'}
+function RunSetup([string]$file){$script:lastSetupLog=Join-Path $work ('setup-'+[guid]::NewGuid().ToString('N')+'.log');$p=Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/GROUP="EagleEyes-Test-'+$id+'"'),('/LOG="'+$script:lastSetupLog+'"')) -Wait -PassThru -WindowStyle Hidden; Assert ($p.ExitCode -eq 0) 'Setup exits successfully'}
 $prefs=Join-Path $env:LOCALAPPDATA 'EagleEyes\settings.json'; $before=if(Test-Path $prefs){(Get-FileHash $prefs).Hash}else{''}
 $failure=$null
 try {
@@ -42,6 +42,24 @@ try {
     Assert ((Get-Content $report -Raw | ConvertFrom-Json).trayRegistered) 'Installed application registers tray icon'
     $engine=Join-Path $app 'engine\ffmpeg-9.0.2-essentials_build\bin'
     Assert (Test-Path "$engine\ffmpeg.exe") 'Recorder installed automatically'
+    if($VerifyEngineReuse){
+        $download='Downloading temporary file from https://github.com/GyanD/codexffmpeg/'
+        if(!$BaselineInstaller){RunSetup $Installer}
+        Assert (!(Select-String -LiteralPath $lastSetupLog -SimpleMatch $download -Quiet)) 'Upgrade skips the FFmpeg download'
+        Assert (Select-String -LiteralPath $lastSetupLog -SimpleMatch 'reutilizando o motor' -Quiet) 'Setup recognizes the verified engine'
+        $probe=Join-Path $engine 'ffprobe.exe'
+        $recorder=Join-Path $engine 'ffmpeg.exe'
+        $probeHash=(Get-FileHash $probe).Hash
+        $recorderHash=(Get-FileHash $recorder).Hash
+        Remove-Item -LiteralPath $probe
+        RunSetup $Installer
+        Assert (Select-String -LiteralPath $lastSetupLog -SimpleMatch $download -Quiet) 'Missing FFprobe triggers download'
+        Assert ((Get-FileHash $probe).Hash -eq $probeHash) 'Missing FFprobe restored'
+        [IO.File]::WriteAllBytes($recorder,[byte[]](0,1,2))
+        RunSetup $Installer
+        Assert (Select-String -LiteralPath $lastSetupLog -SimpleMatch $download -Quiet) 'Damaged FFmpeg triggers download'
+        Assert ((Get-FileHash $recorder).Hash -eq $recorderHash) 'Damaged FFmpeg repaired'
+    }
     $capture=Join-Path $work 'recording'
     $proof=Join-Path $work 'proof.txt'
     $process=Start-Process "$app\EagleEyes.App.exe" -ArgumentList @('--proof-recording','--output',('"'+$capture+'"'),'--report',('"'+$proof+'"')) -WindowStyle Hidden -PassThru
