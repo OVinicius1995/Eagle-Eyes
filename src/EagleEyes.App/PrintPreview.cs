@@ -18,10 +18,10 @@ internal sealed class PrintPreview : Window
     readonly Native.RECT work;
     readonly DispatcherTimer timeout = new() { Interval = TimeSpan.FromSeconds(3) };
     readonly Stopwatch animation = new();
-    readonly TaskCompletionSource<BitmapSource> result = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    readonly TaskCompletionSource<BitmapSource?> result = new(TaskCreationOptions.RunContinuationsAsynchronously);
     readonly InkCanvas ink = new();
     bool editing;
-    internal Task<BitmapSource> Result => result.Task;
+    internal Task<BitmapSource?> Result => result.Task;
 
     internal PrintPreview(BitmapSource image, CaptureArea area, Native.RECT work)
     {
@@ -136,6 +136,14 @@ internal sealed class PrintPreview : Window
         var undo = Add("Desfazer", "Desfazer", () => ink.Strokes.RemoveAt(ink.Strokes.Count - 1));
         undo.IsEnabled = false;
         ink.Strokes.StrokesChanged += (_, _) => undo.IsEnabled = ink.Strokes.Count > 0;
+        var discard = Add("Descartar print", "Descartar print", () =>
+        {
+            result.TrySetResult(null);
+            Close();
+        });
+        const string discardHint = "Fecha o editor sem salvar o PNG. O conteúdo da área de transferência é preservado.";
+        discard.ToolTip = CaptureSafeToolTip.Create(discardHint, true);
+        CaptureSafeToolTip.SetHint(discard, discardHint);
         Add("Salvar original", "Salvar original", Close);
         Add("Salvar print", "Salvar print", FinishEdit, primary: true);
 

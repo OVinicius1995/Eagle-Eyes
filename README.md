@@ -60,6 +60,6 @@ Veja [Instalação e atualizações](docs/INSTALLATION.md). O instalador inclui 
 
 ## Prints e marcações
 
-Clique na câmera ou pressione **Ctrl+Shift+S**. A captura já pode ser colada no Paint com **Ctrl+V**. Ela encolhe até uma miniatura no canto inferior direito. Após três segundos, o Eagle Eyes salva o PNG na pasta de saída. Clique na miniatura antes desse prazo para desenhar, trocar a cor ou desfazer o último traço. **Salvar print** grava o PNG e copia a versão editada. Com a barra ociosa, o print abrange o monitor configurado. Durante a gravação ou pausa, ele usa a região da sessão.
+Clique na câmera ou pressione **Ctrl+Shift+S**. A captura já pode ser colada no Paint com **Ctrl+V**. Ela encolhe até uma miniatura no canto inferior direito. Após três segundos, o Eagle Eyes salva o PNG na pasta de saída. Clique na miniatura antes desse prazo para desenhar, trocar a cor ou desfazer o último traço. **Salvar print** grava o PNG e copia a versão editada. No editor, **Descartar print** fecha a captura sem gravar o PNG. O conteúdo atual da área de transferência é preservado. Com a barra ociosa, o print abrange o monitor configurado. Durante a gravação ou pausa, ele usa a região da sessão.
 
 Na barra de gravação, clique no lápis ou em uma das três cores e arraste sobre a região para marcar. Cada traço desaparece três segundos depois que você solta o mouse. Clique novamente no lápis para apagar as marcas e voltar a interagir com o aplicativo que está sendo gravado.

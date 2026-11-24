@@ -222,3 +222,7 @@ Build Release sem avisos. No desktop, o teste com mouse confirmou a dica do láp
 ## Release 1.4.0
 
 O usuário testou as mudanças locais e aprovou a publicação. A versão reúne prints, edição, lápis de apresentação e dicas contextuais. As verificações específicas de DPI misto seguem pendentes.
+
+## Descarte de print — 24/11/2026
+
+O editor oferece Descartar print e retorna à barra sem publicar PNG ou substituir a área de transferência. Build Release e cenário Presentation passaram. Próximo passo para distribuição é validar a correção local e autorizar uma versão de manutenção.

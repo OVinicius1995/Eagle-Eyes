@@ -277,6 +277,17 @@ try{
    } finally {$paste.Dispose();$bitmap.Dispose()}
    Select-Area $true;Click-Button 'Gravar';Observe-Countdown
    Assert-Hint 'Tirar print (Ctrl+Shift+S)' '*Ctrl+Shift+S*área da gravação*'
+   Hotkey 0x53
+   $null=Wait-Element -name 'Editar print' -kind Button
+   Start-Sleep -Milliseconds 350
+   Click-Button 'Editar print'
+   Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 80 15
+   [Windows.Forms.Clipboard]::SetText('clipboard after capture')
+   Click-Button 'Descartar print'
+   Start-Sleep -Seconds 4
+   Assert ($null -eq (Find-Element -name 'Descartar print' -kind Button)) 'Discard closes the editor'
+   Assert (@(Get-ChildItem $outputDirectory -Filter 'Print-*.png').Count -eq 2) 'Discard publishes no PNG after the preview timeout'
+   Assert ([Windows.Forms.Clipboard]::GetText() -eq 'clipboard after capture') 'Discard preserves the current clipboard'
    Click-Button 'Ativar lápis'
    Drag-Point ([int]($monitor.Width/2)) ([int]($monitor.Height/2)) 90 45
    Click-Button 'Desativar lápis'

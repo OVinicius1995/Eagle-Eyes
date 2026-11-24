@@ -366,12 +366,17 @@ internal sealed class MainWindow : Window
         {
             var image = await Task.Run(() => Screenshot.Capture(area));
             var work = (Native.Monitors().FirstOrDefault(m => area.X >= m.Bounds.Left && area.X < m.Bounds.Right && area.Y >= m.Bounds.Top && area.Y < m.Bounds.Bottom) ?? monitor).Work;
+            bool copied = await CopyPrint(image);
             preview = new PrintPreview(image, area, work) { Owner = this };
             preview.Show();
             if (closing) preview.FinishForExit();
-            bool copied = await CopyPrint(image);
             var final = await preview.Result;
             preview = null;
+            if (final == null)
+            {
+                if (IsVisible && !closing) Activate();
+                return;
+            }
             if (!ReferenceEquals(final, image) || !copied) copied = await CopyPrint(final);
             await Task.Run(() => Screenshot.Save(final, directory));
             if (!copied)
